@@ -1,0 +1,24 @@
+
+# nwtopt.sub 
+# nwtopt hyperparameter optimization for MODFLOW
+
+notification            = Never
+
+universe                = vanilla
+# docker_image=130.11.177.99:5000/gcc_plus_pyemu
+
+executable              = nwtopt.sh
+log                     = logs/condor_logs/nwtopt_$(CLUSTER).log
+output                  = logs/outputs/outfile_$(CLUSTER)_$(PROCESS).txt
+error                   = logs/errors/errors_$(CLUSTER)_$(PROCESS).txt
+stream_output           = True
+stream_error            = True
+should_transfer_files   = Yes
+arguments               = 130.11.177.99:27017/db 90
+when_to_transfer_output = ON_EXIT_OR_EVICT
+request_memory          = 4200
+requirements            = ((Target.OpSys=="LINUX")) && ((Target.Arch=="X86_64"))
+transfer_input_files    = nwtenv.tgz, NWT_SUBMIT
+
+queue 500
+
