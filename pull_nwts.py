@@ -24,13 +24,13 @@ def inputHp2nwt(inputHp, NWTNUM, args):
     return os.path.join(cwd, args.key + '_nwts', ('nwt_{}.nwt'.format(NWTNUM)))
 
 def pullNWTs(ip, port, key, args):
-    print('[INFO] pulling trials')
+    # print('[INFO] pulling trials')
     try:
         trials = MongoTrials('mongo://' + ip + ':' + port + '/db/jobs', exp_key=key)
     except:
         print('[ERROR] invalid ip, port, or key')
         return
-    print('[INFO] generating nwts and performance files')
+    # print('[INFO] generating nwts and performance files')
     inputHp2nwt(trials.best_trial.get('misc').get('vals').to_dict(), args.key + '_best', args)
     for i in range(len(trials.trials)):
         inputHp2nwt(trials.trials[i].get('misc').get('vals').to_dict(), i, args)
@@ -46,7 +46,7 @@ def pullNWTs(ip, port, key, args):
             pass
     df = pd.DataFrame(results, columns=['NWT Number', 'Loss', 'Mass Balance', 'Seconds Elapased', '# of Iterations', 'Min Loss'])
     df.to_csv(os.path.join(os.getcwd(), args.key + '_nwts', 'nwt_performance.csv'), index = False)
-    print('[DONE] you can find your nwts at ' + os.path.join(os.getcwd(), args.key + '_nwts', 'nwt_performance.csv'))
+    # print('[DONE] you can find your nwts at ' + os.path.join(os.getcwd(), args.key + '_nwts', 'nwt_performance.csv'))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Pull NWTs from DB')
