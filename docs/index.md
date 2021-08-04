@@ -55,7 +55,7 @@ Next, all you need to do is run
 ```
 python3 NWTOPT.py --trials <num_trials> --workers <num_workers> --key <job_key>
 ```
-and your jobs will be sent out through condor to your specified <num_workers>, train for <num_trials>, and store that data in the MongoDB under your <job_key>. During optimization the NWTs generated will be pulled into a folder called <job_key>_nwts. In there you can find all the NWTs used in training as well as a nwt_performance.csv which goes into detailed performance reporting.
+and your jobs will be sent out through condor to your specified ```<num_workers```, train for ```<num_trials>```, and store that data in the MongoDB under your ```<job_key>```. During optimization the NWTs generated will be pulled into a folder called ```<job_key>```_nwts. In there you can find all the NWTs used in training as well as a nwt_performance.csv which goes into detailed performance reporting.
 
 
 ### Examples
