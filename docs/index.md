@@ -1,37 +1,42 @@
-## Welcome to GitHub Pages
+## Welcome to NWTOPT for MODFLOW-NWT
 
-You can use the [editor on GitHub](https://github.com/maxwnewcomer/NWTOPT/edit/master/docs/index.md) to maintain and preview the content for your website in Markdown files.
+NWTOPT is a Linux based, hyperparameter optimization and tuning system for steady-state and transient models ran by MODFLOW-NWT. NWTOPT is a distributed, parallel compute, and MODFLOW-NWT specific extension of the hyperparameter optimization [Hyperopt](https://github.com/hyperopt/hyperopt) framework. While you can run NWTOPT on any system of Linux computers, NWTOPT also comes with specific support for [HTCondor](https://research.cs.wisc.edu/htcondor/), a High Throughput Computing system for large collections of distributively owned computing resources. 
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+### Links to resources
+- [How It Works](#how-it-works)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Using NWTOPT](#using-nwtopt)
+- [Examples](#examples)
+- [FAQ](#faq)
 
-### Markdown
+### How It Works
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras consectetur turpis eu felis gravida, et posuere erat eleifend. Integer neque tortor, dictum at magna vel, gravida imperdiet dolor. Duis aliquet tortor ac urna maximus, porttitor interdum erat interdum. Etiam id lobortis nisl. Morbi sit amet imperdiet augue. Fusce rutrum est lorem, a placerat erat pulvinar a. Sed consectetur aliquam lorem, a vestibulum justo gravida rhoncus. Maecenas pharetra dui ut nisl vehicula porttitor. Praesent sed enim eget sapien dignissim porttitor. Mauris lectus libero, rutrum nec vulputate eget, sollicitudin nec massa. Donec at suscipit tortor. Mauris vel vestibulum augue.
+### Requirements
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras consectetur turpis eu felis gravida, et posuere erat eleifend. Integer neque tortor, dictum at magna vel, gravida imperdiet dolor. Duis aliquet tortor ac urna maximus, porttitor interdum erat interdum. Etiam id lobortis nisl. Morbi sit amet imperdiet augue. Fusce rutrum est lorem, a placerat erat pulvinar a. Sed consectetur aliquam lorem, a vestibulum justo gravida rhoncus. Maecenas pharetra dui ut nisl vehicula porttitor. Praesent sed enim eget sapien dignissim porttitor. Mauris lectus libero, rutrum nec vulputate eget, sollicitudin nec massa. Donec at suscipit tortor. Mauris vel vestibulum augue.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+### Installation
 
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+To install, simply:
+```
+git clone https://github.com/maxwnewcomer/NWTOPT.git
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
 
-### Jekyll Themes
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/maxwnewcomer/NWTOPT/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
 
-### Support or Contact
+### Using NWTOPT
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras consectetur turpis eu felis gravida, et posuere erat eleifend. Integer neque tortor, dictum at magna vel, gravida imperdiet dolor. Duis aliquet tortor ac urna maximus, porttitor interdum erat interdum. Etiam id lobortis nisl. Morbi sit amet imperdiet augue. Fusce rutrum est lorem, a placerat erat pulvinar a. Sed consectetur aliquam lorem, a vestibulum justo gravida rhoncus. Maecenas pharetra dui ut nisl vehicula porttitor. Praesent sed enim eget sapien dignissim porttitor. Mauris lectus libero, rutrum nec vulputate eget, sollicitudin nec massa. Donec at suscipit tortor. Mauris vel vestibulum augue.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras consectetur turpis eu felis gravida, et posuere erat eleifend. Integer neque tortor, dictum at magna vel, gravida imperdiet dolor. Duis aliquet tortor ac urna maximus, porttitor interdum erat interdum. Etiam id lobortis nisl. Morbi sit amet imperdiet augue. Fusce rutrum est lorem, a placerat erat pulvinar a. Sed consectetur aliquam lorem, a vestibulum justo gravida rhoncus. Maecenas pharetra dui ut nisl vehicula porttitor. Praesent sed enim eget sapien dignissim porttitor. Mauris lectus libero, rutrum nec vulputate eget, sollicitudin nec massa. Donec at suscipit tortor. Mauris vel vestibulum augue.
+
+
+### Examples
+
+
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras consectetur turpis eu felis gravida, et posuere erat eleifend. Integer neque tortor, dictum at magna vel, gravida imperdiet dolor. Duis aliquet tortor ac urna maximus, porttitor interdum erat interdum. Etiam id lobortis nisl. Morbi sit amet imperdiet augue. Fusce rutrum est lorem, a placerat erat pulvinar a. Sed consectetur aliquam lorem, a vestibulum justo gravida rhoncus. Maecenas pharetra dui ut nisl vehicula porttitor. Praesent sed enim eget sapien dignissim porttitor. Mauris lectus libero, rutrum nec vulputate eget, sollicitudin nec massa. Donec at suscipit tortor. Mauris vel vestibulum augue.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras consectetur turpis eu felis gravida, et posuere erat eleifend. Integer neque tortor, dictum at magna vel, gravida imperdiet dolor. Duis aliquet tortor ac urna maximus, porttitor interdum erat interdum. Etiam id lobortis nisl. Morbi sit amet imperdiet augue. Fusce rutrum est lorem, a placerat erat pulvinar a. Sed consectetur aliquam lorem, a vestibulum justo gravida rhoncus. Maecenas pharetra dui ut nisl vehicula porttitor. Praesent sed enim eget sapien dignissim porttitor. Mauris lectus libero, rutrum nec vulputate eget, sollicitudin nec massa. Donec at suscipit tortor. Mauris vel vestibulum augue.
+
+
+### FAQ
