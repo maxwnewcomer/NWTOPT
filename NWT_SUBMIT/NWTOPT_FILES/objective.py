@@ -1,10 +1,15 @@
 import os
 import time
 import fileinput
+from wrapt_timeout_decorator import *
 from subprocess import call, Popen
 from shutil import copyfile, rmtree
 import pandas as pd
 from hyperopt import STATUS_OK
+import math
+
+global timelim
+timelim = None
 
 def inputHp2nwt(inputHp):
     global cwd
@@ -40,11 +45,13 @@ def trials2csv(trials):
     df = pd.DataFrame(trials.results).drop('loss', axis=1)
     df.to_csv(os.path.join(cwd, 'nwt_performance.csv'))
 
+@timeout(timelim)
 def runModel(pathtonwt, initnwt):
     global cwd
     global namefile
     copyfile(pathtonwt, os.path.join(cwd, initnwt))
-    call([os.path.join(cwd + '/mfnwt'), namefile], cwd=cwd, shell=False)
+    call(['./run.sh'], cwd = cwd, shell = False)
+    return True
 
 def getdata():
     global cwd
@@ -65,6 +72,9 @@ def getdata():
             if 'OUTER ITERATIONS' in line:
                 iterline = line
                 break
+    if timeline == '':
+        return 999999, -1, 999999
+
     for val in mbline.split(' '):
         try:
             mass_balance = float(val)
@@ -118,11 +128,25 @@ def getdata():
         print('[ERROR] bad run')
         return 999999, -1, 999999
 
+def processRunCommand():
+    global timelim
+    with open('run.sh') as f:
+        for line in f:
+            pass
+        last_line = line
+    os.system('sed -i "$ d" {0}'.format('run.sh'))
+    try:
+        timelim = int(last_line) * 60
+        print(f'[INFO] Timeout for model run is set to {timelim} minutes')
+    except Exception as e:
+        print('[INFO] No timeout set for model run')
+
 def objective(inputHp):
     global cwd
     global namefile
     global listfile
     global initnwt
+    global timelim
     cwd = os.path.join(os.sep + os.path.join(*os.getcwd().split(os.sep)[0:-1]), os.path.join('NWT_SUBMIT','PROJECT_FILES'))
     for file in os.listdir(cwd):
         if file.endswith('.nam'):
@@ -144,14 +168,22 @@ def objective(inputHp):
                     initnwt = e.strip()
 
     pathtonwt = inputHp2nwt(inputHp)
-    runModel(pathtonwt, initnwt)
+    processRunCommand()
+    if not runModel(pathtonwt, initnwt):
+        return {'loss': 999999999999,
+                'status':  STATUS_OK,
+                'eval_time': time.time(),
+                'mass_balance': 999999,
+                'sec_elapsed': timelim,
+                'iterations': -1,
+                'NWT Used': pathtonwt}
+
     sec_elapsed, iterations, mass_balance = getdata()
-    if abs(mass_balance) == 0:
-        loss = .005 * sec_elapsed
-    elif abs(mass_balance) < 1:
-        loss = sec_elapsed - ((1 - abs(mass_balance)) * sec_elapsed)
+    if mass_balance == 999999:
+        loss = 999999999999
     else:
-        loss = sec_elapsed + abs(mass_balance) ** 3
+        loss = math.exp(mass_balance ** 2) * sec_elapsed
+
     return {'loss': loss,
             'status':  STATUS_OK,
             'eval_time': time.time(),

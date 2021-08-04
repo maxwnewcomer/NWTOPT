@@ -70,7 +70,7 @@ if __name__ == '__main__':
     parser.add_argument('--ip', metavar='N', type=str, help='ip address of DB')
     parser.add_argument('--port', type=str, help='port of DB')
     parser.add_argument('--key', type=str, help='key of job you want to pull')
-    parser.add_argument('--random', type=bool, required=False, default=True)
+    parser.add_argument('--random', type=bool, required=False, default=False)
     parser.add_argument('--trials', type=int, help='num trials you would like to run')
     args = parser.parse_args()
     trials = MongoTrials('mongo://'+ args.ip + ':'+ args.port + '/db/jobs', exp_key=args.key)
@@ -81,6 +81,7 @@ if __name__ == '__main__':
     with open(os.path.join(os.getcwd(), 'nwts/nwtnum.txt'), 'w+') as f:
         f.write('0')
     if args.random == False:
+        print('TPE Run')
         bestHp = fmin(fn=objective.objective,
                       space=hparams,
                       algo=tpe.suggest,
