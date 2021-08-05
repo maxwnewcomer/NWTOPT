@@ -7,13 +7,17 @@ NWTOPT is a Linux based, hyperparameter optimization and tuning system for stead
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Your First Time Using NWTOPT](#your-first-time-using-nwtopt)
-- [Examples](#examples)
+- [NWTOPT Arguments](#nwtopt-arugments)
+- [Example Results](#example-results)
 - [FAQ](#faq)
 
 ### How It Works
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras consectetur turpis eu felis gravida, et posuere erat eleifend. Integer neque tortor, dictum at magna vel, gravida imperdiet dolor. Duis aliquet tortor ac urna maximus, porttitor interdum erat interdum. Etiam id lobortis nisl. Morbi sit amet imperdiet augue. Fusce rutrum est lorem, a placerat erat pulvinar a. Sed consectetur aliquam lorem, a vestibulum justo gravida rhoncus. Maecenas pharetra dui ut nisl vehicula porttitor. Praesent sed enim eget sapien dignissim porttitor. Mauris lectus libero, rutrum nec vulputate eget, sollicitudin nec massa. Donec at suscipit tortor. Mauris vel vestibulum augue.
+
+The optimization approach we’ve coded in NWTOPT is a distributed, parallel compute, and MODFLOW specific extension of [Hyperopt](https://github.com/hyperopt/hyperopt). Hyperopt provides a Tree of Parzen Estimators (TPE) hyperparameter optimization algorithm, a worker script, and a Python interface used to communicate with workers through a persistent database that tracks and synthesizes the workers’ results.  NWTOPT includes extensions to Hyperopt that facilitate optimization of MODFLOW Newton-Raphson solver settings in a high-throughput computing environment.
+
 ### Requirements
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras consectetur turpis eu felis gravida, et posuere erat eleifend. Integer neque tortor, dictum at magna vel, gravida imperdiet dolor. Duis aliquet tortor ac urna maximus, porttitor interdum erat interdum. Etiam id lobortis nisl. Morbi sit amet imperdiet augue. Fusce rutrum est lorem, a placerat erat pulvinar a. Sed consectetur aliquam lorem, a vestibulum justo gravida rhoncus. Maecenas pharetra dui ut nisl vehicula porttitor. Praesent sed enim eget sapien dignissim porttitor. Mauris lectus libero, rutrum nec vulputate eget, sollicitudin nec massa. Donec at suscipit tortor. Mauris vel vestibulum augue.
+
+NWTOPT is meant to be ran on Linux systems. NWTOPT also requires [Anaconda](anaconda.org) on both the worker and master systems. If you would like to enable easy parallelization, HTCondor job management is supported but not required.
 
 ### Installation
 
@@ -55,14 +59,35 @@ Next, all you need to do is run
 ```
 python3 NWTOPT.py --trials <num_trials> --workers <num_workers> --key <job_key>
 ```
-and your jobs will be sent out through condor to your specified ```<num_workers```, train for ```<num_trials>```, and store that data in the MongoDB under your ```<job_key>```. During optimization the NWTs generated will be pulled into a folder called ```<job_key>```_nwts. In there you can find all the NWTs used in training as well as a nwt_performance.csv which goes into detailed performance reporting.
+and your jobs will be sent out through condor to your specified ```<num_workers>```, train for ```<num_trials>```, and store that data in the MongoDB under your ```<job_key>```. During optimization the NWTs generated will be pulled into a folder called ```<job_key>```_nwts. In there you can find all the NWTs used in training as well as a nwt_performance.csv which goes into detailed performance reporting.
 
 
-### Examples
+## NWTOPT Arguments
+
+| Argument | Description | Default | Required |
+| -------  | ----------- | ------- | -------- |
+| --ip     | The ip address for the MongoDB | Current IP address | No |
+| --port   | The port that the MongoDB will be accessible at | 27017 | No |
+| --key    | The key that the MongoDB will use to store the results of the optimization** | None | Yes |
+| --workers | The number of workers you would like to start (if using HTCondor) | 0 | No |
+| --random | Set to True to switch from TPE optimization algorithm to Random Search | False | No |
+| --trials | The number of optimization trials you would like to run | None | Yes |
+| --poll_interval | The amount of time (in seconds) each HTCondor worker polls the MongoDB for a new set of hyperparameters | 240 | No
+| --enable-condor | Set to False to disable sending out the run through HTCondor | True | No |
+| --timeout | The amount of time (in minutes) for a model run to be considered failed | None | No |
+
+** use the same key to resume progress on an optimization run
+
+## Example Results
 
 
+## FAQ
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras consectetur turpis eu felis gravida, et posuere erat eleifend. Integer neque tortor, dictum at magna vel, gravida imperdiet dolor. Duis aliquet tortor ac urna maximus, porttitor interdum erat interdum. Etiam id lobortis nisl. Morbi sit amet imperdiet augue. Fusce rutrum est lorem, a placerat erat pulvinar a. Sed consectetur aliquam lorem, a vestibulum justo gravida rhoncus. Maecenas pharetra dui ut nisl vehicula porttitor. Praesent sed enim eget sapien dignissim porttitor. Mauris lectus libero, rutrum nec vulputate eget, sollicitudin nec massa. Donec at suscipit tortor. Mauris vel vestibulum augue.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras consectetur turpis eu felis gravida, et posuere erat eleifend. Integer neque tortor, dictum at magna vel, gravida imperdiet dolor. Duis aliquet tortor ac urna maximus, porttitor interdum erat interdum. Etiam id lobortis nisl. Morbi sit amet imperdiet augue. Fusce rutrum est lorem, a placerat erat pulvinar a. Sed consectetur aliquam lorem, a vestibulum justo gravida rhoncus. Maecenas pharetra dui ut nisl vehicula porttitor. Praesent sed enim eget sapien dignissim porttitor. Mauris lectus libero, rutrum nec vulputate eget, sollicitudin nec massa. Donec at suscipit tortor. Mauris vel vestibulum augue.
 
+## Future Work
 
-### FAQ
+- [x] Transient model support
+- [x] WINE support
+- [ ] MODFLOW-6 support
+- [ ] GSFLOW support
+- [ ] Automatic insight generation

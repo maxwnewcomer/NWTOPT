@@ -1,11 +1,3 @@
-# FEATURE BRAINSTORM
-# file checker and directory modifier
-    # check db/ exists
-    # run model on local machine to confirm correct model files
-    # make sure NWTOPT_FILES has right files (objective.py, optimize_NWT.py, mfnwt)
-# generate graph (in pull_nwts.py)
-# timeout arg
-
 import subprocess
 import time
 import os
@@ -14,6 +6,7 @@ import argparse
 import fileinput
 import signal
 
+## Modify nwtopt.sub to have user inputed ip:port and poll interval
 def modifySubmitFile(workers, ip, port, pollInterval):
     for line in fileinput.input('nwtopt.sub', inplace = True):
         if line.startswith('arguments'):
@@ -23,10 +16,12 @@ def modifySubmitFile(workers, ip, port, pollInterval):
         else:
             print(line, end='')
 
+## Kill all processes on ^C
 def signal_handler(signum, frame):
     print(f'{os.linesep} [INFO] terminating all processes')
     killProcesses()
 
+## Modify run.sh to have user inputed timeout
 def modifyTimeout(timeout):
     printNext = False
     for line in fileinput.input('run.sh', inplace = True):
@@ -42,6 +37,7 @@ def modifyTimeout(timeout):
         else:
             print(line, end='')
 
+## End all processes that are ran by NWTOPT
 def killProcesses():
     os.killpg(db.pid, signal.SIGKILL)
     try:
@@ -53,6 +49,7 @@ def killProcesses():
 signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == '__main__':
+    # args
     parser = argparse.ArgumentParser(description='NWTOPT - Hyperparameter Optimization for MODFLOW-NWT')
     parser.add_argument('--ip', type=str, required=False, default=socket.gethostbyname(socket.gethostname()), help='ip address of DB')
     parser.add_argument('--port', type=int, required=False, default=27017, help='port of DB')
@@ -63,10 +60,12 @@ if __name__ == '__main__':
     parser.add_argument('--poll_interval', type=int, required=False, default=240, help='the frequency that a Condor worker pings the DB in seconds')
     parser.add_argument('--enable_condor', type=bool, required=False, default=True, help='set to True to send out jobs through Condor')
     parser.add_argument('--timeout', type=float, required=False, default=None, help='model run time limit - leave empty for no time limit')
+    # init vars
     args = parser.parse_args()
     cluster = None
     FNULL = open(os.devnull, 'w')
 
+    # var assertion
     assert args.trials > 0, 'You cannot run NWTOPT with less than 1 trial'
     assert args.poll_interval > 0, 'You cannot run NWTOPT with a poll interval less than 1 second'
     if args.enable_condor:
