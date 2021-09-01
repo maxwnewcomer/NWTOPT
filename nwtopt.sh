@@ -19,11 +19,11 @@ source nwtenv/bin/activate
 echo
 conda-unpack
 python3 --version
-pip freeze
 echo ...Changed Python Environment...
 echo
 mv NWT_SUBMIT/NWTOPT_FILES/objective.py nwtenv/bin/objective.py
-mv run.sh NWT_SUBMIT/PROJECT_FILES/run.sh
+cp run.sh nwtenv/bin/run.sh
+cp run.sh NWT_SUBMIT/PROJECT_FILES/run.sh
 mv NWT_SUBMIT/NWTOPT_FILES/mfnwt NWT_SUBMIT/PROJECT_FILES/mfnwt
 mkdir NWT_SUBMIT/PROJECT_FILES/nwts
 mv NWT_SUBMIT/NWTOPT_FILES/nwtnum.txt NWT_SUBMIT/PROJECT_FILES/nwts/nwtnum.txt

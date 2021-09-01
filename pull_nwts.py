@@ -3,6 +3,7 @@ import pandas as pd
 import time
 from hyperopt import Trials
 from hyperopt.mongoexp import MongoTrials
+from hyperopt.exceptions import AllTrialsFailed
 import argparse
 
 def inputHp2nwt(inputHp, NWTNUM, args):
@@ -24,16 +25,22 @@ def inputHp2nwt(inputHp, NWTNUM, args):
     return os.path.join(cwd, args.key + '_nwts', ('nwt_{}.nwt'.format(NWTNUM)))
 
 def pullNWTs(ip, port, key, args):
-    # print('[INFO] pulling trials')
+    if args.verbose:
+        print('[INFO] pulling trials')
     try:
         trials = MongoTrials('mongo://' + ip + ':' + port + '/db/jobs', exp_key=key)
     except:
         print('[ERROR] invalid ip, port, or key')
         return
-    # print('[INFO] generating nwts and performance files')
-    inputHp2nwt(trials.best_trial.get('misc').get('vals').to_dict(), args.key + '_best', args)
+    if args.verbose:
+        print('[INFO] generating nwts and performance files')
+    try:
+        inputHp2nwt(trials.best_trial.get('misc').get('vals').to_dict(), args.key + '_best', args)
+    except AllTrialsFailed as e:
+        print('[INFO] no trials to pull')
     for i in range(len(trials.trials)):
         inputHp2nwt(trials.trials[i].get('misc').get('vals').to_dict(), i, args)
+
     results = []
     minLoss = 9999
     for i in range(len(trials.trials)):
@@ -46,7 +53,8 @@ def pullNWTs(ip, port, key, args):
             pass
     df = pd.DataFrame(results, columns=['NWT Number', 'Loss', 'Mass Balance', 'Seconds Elapased', '# of Iterations', 'Min Loss'])
     df.to_csv(os.path.join(os.getcwd(), args.key + '_nwts', 'nwt_performance.csv'), index = False)
-    # print('[DONE] you can find your nwts at ' + os.path.join(os.getcwd(), args.key + '_nwts', 'nwt_performance.csv'))
+    if args.verbose:
+        print('[DONE] you can find your nwts at ' + os.path.join(os.getcwd(), args.key + '_nwts', 'nwt_performance.csv'))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Pull NWTs from DB')
@@ -54,6 +62,7 @@ if __name__ == '__main__':
     parser.add_argument('--port', type=str, help='port of DB')
     parser.add_argument('--key', type=str, help='key of job you want to pull')
     parser.add_argument('--loop', type=bool, required=False, default=False)
+    parser.add_argument('--verbose', type=bool, required=False, default=True)
     args = parser.parse_args()
     try:
         os.mkdir(os.path.join(os.getcwd(), args.key + '_nwts'))
