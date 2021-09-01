@@ -50,6 +50,7 @@ def runModel(pathtonwt, initnwt):
     global cwd
     global namefile
     copyfile(pathtonwt, os.path.join(cwd, initnwt))
+    print('[INFO] Starting run.sh out of ', cwd)
     call(['./run.sh'], cwd = cwd, shell = False)
     return True
 
@@ -130,14 +131,17 @@ def getdata():
 
 def processRunCommand():
     global timelim
-    with open('run.sh') as f:
+    cd = os.getcwd()  # Get the current working directory (cwd)
+    files = os.listdir(cd)  # Get all the files in that directory
+    print("Files in %r: %s" % (cd, files))
+    with open('../run.sh') as f:
         for line in f:
             pass
         last_line = line
-    os.system('sed -i "$ d" {0}'.format('run.sh'))
+    os.system('sed -i "$ d" {0}'.format('../run.sh'))
     try:
         timelim = int(last_line) * 60
-        print(f'[INFO] Timeout for model run is set to {timelim} minutes')
+        print(f'[INFO] Timeout for model run is set to {timelim / 60} minutes')
     except Exception as e:
         print('[INFO] No timeout set for model run')
 
