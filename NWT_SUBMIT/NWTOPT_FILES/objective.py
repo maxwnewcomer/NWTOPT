@@ -133,11 +133,11 @@ def processRunCommand():
     global timelim
     cd = os.getcwd()  # Get the current working directory (cwd)
     files = os.listdir(cd)  # Get all the files in that directory
+    last_line = ""
     print("Files in %r: %s" % (cd, files))
     with open('../run.sh') as f:
         for line in f:
-            pass
-        last_line = line
+            last_line = line
     os.system('sed -i "$ d" {0}'.format('../run.sh'))
     try:
         timelim = int(last_line) * 60
