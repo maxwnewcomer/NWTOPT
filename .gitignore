@@ -1,0 +1,10 @@
+# ignore the project files so individual MODFLOW models can be tested
+# without trying to track their changes
+NWT_SUBMIT/PROJECT_FILES/
+
+# don't track run.sh as it changes for different models
+run.sh
+
+# usual
+*.bak
+.ipynb_checkpoints
