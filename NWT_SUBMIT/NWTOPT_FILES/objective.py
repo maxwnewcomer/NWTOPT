@@ -138,7 +138,6 @@ def processRunCommand():
     with open('../run.sh') as f:
         for line in f:
             last_line = line
-    os.system('sed -i "$ d" {0}'.format('../run.sh'))
     try:
         timelim = int(last_line) * 60
         print(f'[INFO] Timeout for model run is set to {timelim / 60} minutes')
