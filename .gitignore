@@ -6,5 +6,8 @@ NWT_SUBMIT/PROJECT_FILES/
 run.sh
 
 # usual
+*_nwts/
+logfile.txt
+*.reg
 *.bak
 .ipynb_checkpoints
