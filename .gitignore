@@ -6,6 +6,7 @@ NWT_SUBMIT/PROJECT_FILES/
 run.sh
 
 # usual
+.update-timestamp
 *_nwts/
 logfile.txt
 *.reg
