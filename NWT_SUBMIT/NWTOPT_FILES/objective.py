@@ -1,8 +1,9 @@
 import os
 import time
 import fileinput
-from wrapt_timeout_decorator import *
-from subprocess import call, Popen
+from subprocess import call, Popen, STDOUT, check_output, TimeoutExpired
+import subprocess
+from threading import Timer
 from shutil import copyfile, rmtree
 import pandas as pd
 from hyperopt import STATUS_OK
@@ -45,13 +46,48 @@ def trials2csv(trials):
     df = pd.DataFrame(trials.results).drop('loss', axis=1)
     df.to_csv(os.path.join(cwd, 'nwt_performance.csv'))
 
-@timeout(timelim)
 def runModel(pathtonwt, initnwt):
     global cwd
     global namefile
+    global timelim
     copyfile(pathtonwt, os.path.join(cwd, initnwt))
-    print('[INFO] Starting run.sh out of ', cwd)
-    call(['./run.sh'], cwd = cwd, shell = False)
+    last_line = ""
+    run_command = ""
+    use_timer = True
+    use_next = False
+    with open(os.path.join(cwd, 'run.sh')) as f:
+        for line in f:
+            if use_next:
+                run_command = line
+                use_next = False
+            elif line.startswith('# Run Command:'):
+                use_next = True
+            last_line = line
+    try:
+        timelim = float(last_line) * 60
+        print(f'[INFO] Timeout for model run is set to {timelim / 60} minutes')
+    except Exception as e:
+        use_timer = False
+        print('[INFO] No timeout set for model run')
+    print(f'[INFO] Using run command: {run_command.strip()}')
+    print(f'[INFO] Starting run out of {cwd}')
+
+    kill = lambda process: process.kill()
+    modflowProcess = Popen(run_command.strip().split(' '), cwd = cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if use_timer:
+        timer = Timer(timelim, kill, [modflowProcess])
+        try:
+            timer.start()
+            stdout, stderr = modflowProcess.communicate()
+            print(str(stdout, 'utf-8'), '\n', str(stderr, 'utf-8'))
+        finally:
+            print('[WARNING] Time Limit reached, terminating run')
+            timer.cancel()
+            return False
+    else:
+        stdout, stderr = modflowProcess.communicate()
+        print(str(stdout, 'utf-8'), '\n', str(stderr, 'utf-8'))
+    print("[INFO] Successful termination of trial")
     return True
 
 def getdata():
@@ -129,21 +165,6 @@ def getdata():
         print('[ERROR] bad run')
         return 999999, -1, 999999
 
-def processRunCommand():
-    global timelim
-    cd = os.getcwd()  # Get the current working directory (cwd)
-    files = os.listdir(cd)  # Get all the files in that directory
-    last_line = ""
-    print("Files in %r: %s" % (cd, files))
-    with open('../run.sh') as f:
-        for line in f:
-            last_line = line
-    try:
-        timelim = int(last_line) * 60
-        print(f'[INFO] Timeout for model run is set to {timelim / 60} minutes')
-    except Exception as e:
-        print('[INFO] No timeout set for model run')
-
 def objective(inputHp):
     global cwd
     global namefile
@@ -171,7 +192,6 @@ def objective(inputHp):
                     initnwt = e.strip()
 
     pathtonwt = inputHp2nwt(inputHp)
-    processRunCommand()
     if not runModel(pathtonwt, initnwt):
         return {'loss': 999999999999,
                 'status':  STATUS_OK,

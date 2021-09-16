@@ -1,0 +1,8 @@
+INFO (numexpr.utils): Note: NumExpr detected 20 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+INFO (hyperopt.mongoexp): job exception: [Errno 2] No such file or directory: './run.sh'
+INFO (numexpr.utils): Note: NumExpr detected 20 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+INFO (hyperopt.mongoexp): job exception: [Errno 2] No such file or directory: './run.sh'
+INFO (numexpr.utils): Note: NumExpr detected 20 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+INFO (hyperopt.mongoexp): job exception: [Errno 2] No such file or directory: './run.sh'
+INFO (numexpr.utils): Note: NumExpr detected 20 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+INFO (hyperopt.mongoexp): job exception: [Errno 2] No such file or directory: './run.sh'
