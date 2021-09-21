@@ -1,7 +1,7 @@
 import os
 import time
 import fileinput
-from subprocess import call, Popen, STDOUT, check_output, TimeoutExpired
+from subprocess import call, Popen, run, STDOUT, check_output, TimeoutExpired
 import subprocess
 from threading import Timer
 from shutil import copyfile, rmtree
