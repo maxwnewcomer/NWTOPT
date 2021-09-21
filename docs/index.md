@@ -43,6 +43,19 @@ Then, you will need to pack the environment into something that can be sent to e
 conda pack -n <env_name> -o nwtenv.tgz
 ```
 
+Next you will need to create the mongodb database folder so your information can be stored persistently and accessed by NWTOPT
+
+```
+mkdir mongodb/db
+```
+
+If you will be using HTCondor to distribute your runs, make sure you create the log directories as follows:
+```
+mkdir logs
+cd logs
+mkdir condor_logs; mkdir errors; mkdir outputs
+```
+
 You should now be ready to run your first optimization. Continue to the next section to see how you can start using NWTOPT.
 
 
