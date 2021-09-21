@@ -20,4 +20,4 @@ request_memory          = 4200
 requirements            = ((Target.OpSys=="LINUX")) && ((Target.Arch=="X86_64"))
 transfer_input_files    = nwtenv.tgz, NWT_SUBMIT, run.sh
 
-queue 375
+queue 100

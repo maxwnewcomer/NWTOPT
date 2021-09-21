@@ -1,7 +1,7 @@
 import os
 import time
 import fileinput
-from subprocess import call, Popen, STDOUT, check_output, TimeoutExpired
+from subprocess import call, Popen, run, STDOUT, check_output, TimeoutExpired
 import subprocess
 from threading import Timer
 from shutil import copyfile, rmtree
@@ -67,28 +67,20 @@ def runModel(pathtonwt, initnwt):
         timelim = float(last_line) * 60
         print(f'[INFO] Timeout for model run is set to {timelim / 60} minutes')
     except Exception as e:
+        timelim = None
         use_timer = False
         print('[INFO] No timeout set for model run')
     print(f'[INFO] Using run command: {run_command.strip()}')
     print(f'[INFO] Starting run out of {cwd}')
 
-    kill = lambda process: process.kill()
-    modflowProcess = Popen(run_command.strip().split(' '), cwd = cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if use_timer:
-        timer = Timer(timelim, kill, [modflowProcess])
-        try:
-            timer.start()
-            stdout, stderr = modflowProcess.communicate()
-            print(str(stdout, 'utf-8'), '\n', str(stderr, 'utf-8'))
-        finally:
-            print('[WARNING] Time Limit reached, terminating run')
-            timer.cancel()
-            return False
-    else:
-        stdout, stderr = modflowProcess.communicate()
-        print(str(stdout, 'utf-8'), '\n', str(stderr, 'utf-8'))
-    print("[INFO] Successful termination of trial")
-    return True
+    try:
+        modflowProcess = run(run_command.strip().split(' '), cwd = cwd, capture_output = True, timeout = timelim)
+        print(str(modflowProcess.stdout, 'utf-8'), '\n', str(modflowProcess.stderr, 'utf-8'))
+        print("[INFO] Successful termination of trial")
+        return True
+    except TimeoutExpired:
+        print('[WARNING] Time Limit reached, terminating run')
+        return False
 
 def getdata():
     global cwd
