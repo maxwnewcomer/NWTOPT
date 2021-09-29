@@ -1,6 +1,6 @@
 #!/bin/sh
 ############################
 # Run Command:
-wine MODFLOW-NWT_64.exe tmr_pr_11_13_calib_PM_flooded_scen3.nam
+./mfnwt meras_transient_rjh_19Feb20.nam
 # Model timeout (in minutes) - Leave blank if no timeout required
-12.5
+315

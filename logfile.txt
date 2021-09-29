@@ -1,6 +1,11 @@
 INFO (numexpr.utils): Note: NumExpr detected 40 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
-INFO (hyperopt.mongoexp): job exception: name 'run' is not defined
 INFO (numexpr.utils): Note: NumExpr detected 40 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
-INFO (hyperopt.mongoexp): job exception: name 'run' is not defined
 INFO (numexpr.utils): Note: NumExpr detected 40 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
-INFO (hyperopt.mongoexp): job exception: name 'run' is not defined
+INFO (numexpr.utils): Note: NumExpr detected 40 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+INFO (numexpr.utils): Note: NumExpr detected 40 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+INFO (numexpr.utils): Note: NumExpr detected 40 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+INFO (numexpr.utils): Note: NumExpr detected 40 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+INFO (numexpr.utils): Note: NumExpr detected 40 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+INFO (numexpr.utils): Note: NumExpr detected 40 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+INFO (numexpr.utils): Note: NumExpr detected 40 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+INFO (numexpr.utils): Note: NumExpr detected 40 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.

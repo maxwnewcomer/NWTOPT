@@ -14,10 +14,10 @@ error                   = logs/errors/errors_$(CLUSTER)_$(PROCESS).txt
 stream_output           = True
 stream_error            = True
 should_transfer_files   = Yes
-arguments               = 130.11.177.99:27017/db 240
+arguments               = 130.11.177.99:2742/db 400
 when_to_transfer_output = ON_EXIT_OR_EVICT
 request_memory          = 4200
 requirements            = ((Target.OpSys=="LINUX")) && ((Target.Arch=="X86_64"))
 transfer_input_files    = nwtenv.tgz, NWT_SUBMIT, run.sh
 
-queue 100
+queue 375
