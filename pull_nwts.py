@@ -48,10 +48,10 @@ def pullNWTs(ip, port, key, args):
         try:
             if trial['loss'] < minLoss:
                 minLoss = trial['loss']
-            results.append([i, trial['loss'], trial['mass_balance'], trial['sec_elapsed'], trial['iterations'], minLoss])
+            results.append([i, trial['eval_time'], trial['finish_time'], trial['loss'], trial['mass_balance'], trial['sec_elapsed'], trial['iterations'], minLoss])
         except:
             pass
-    df = pd.DataFrame(results, columns=['NWT Number', 'Loss', 'Mass Balance', 'Seconds Elapased', '# of Iterations', 'Min Loss'])
+    df = pd.DataFrame(results, columns=['NWT Number', 'Start Time', 'Finish Time', 'Loss', 'Mass Balance', 'Seconds Elapased', '# of Iterations', 'Min Loss'])
     df.to_csv(os.path.join(os.getcwd(), args.key + '_nwts', 'nwt_performance.csv'), index = False)
     if args.verbose:
         print('[DONE] you can find your nwts at ' + os.path.join(os.getcwd(), args.key + '_nwts', 'nwt_performance.csv'))

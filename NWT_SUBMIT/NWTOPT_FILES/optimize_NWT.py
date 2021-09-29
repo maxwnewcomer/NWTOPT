@@ -84,12 +84,14 @@ if __name__ == '__main__':
         print('TPE Run')
         bestHp = fmin(fn=objective.objective,
                       space=hparams,
+                      max_queue_len=3,
                       algo=tpe.suggest,
                       max_evals=args.trials,
                       trials=trials)
     else:
         bestRandHp = fmin(fn=objective.objective,
                       space=hparams,
+                      max_queue_len=3,
                       algo=rand.suggest,
                       max_evals=args.trials,
                       trials=trials)
