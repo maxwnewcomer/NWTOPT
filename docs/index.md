@@ -28,8 +28,7 @@ git clone https://github.com/maxwnewcomer/NWTOPT.git
 Once you have cloned the repository, you need to create the Python environment that NWTOPT and it's workers use. 
 
 ```
-conda create -n <env_name> 
-conda env update -f conda_requirements.yml -n <env_name>
+conda env create -n <env_name> -f conda_requirements.yml
 conda activate <env_name>
 ```
 
