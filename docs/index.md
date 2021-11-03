@@ -8,7 +8,7 @@ NWTOPT is a Linux based, hyperparameter optimization and tuning system for stead
 - [Installation](#installation)
 - [Your First Time Using NWTOPT](#your-first-time-using-nwtopt)
 - [Common Issues and Fixes](#common-issues-and-fixes)
-- [Example Results](#example-results)
+- [Future Work](#future-work)
 
 ### How It Works
 
