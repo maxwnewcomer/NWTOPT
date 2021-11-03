@@ -49,9 +49,8 @@ dependencies:
 - xz=5.2.5
 - zlib=1.2.11
 - pip
-- pip:
-  - pathlib==1.0
-  - dill==0.3.4
-  - wrapt==1.12.1
-  - multiprocess==0.70.12.2
+- pathlib==1.0
+- dill==0.3.4
+- wrapt==1.12.1
+- multiprocess==0.70.12.2
 
