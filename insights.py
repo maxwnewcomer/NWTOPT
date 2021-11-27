@@ -19,7 +19,6 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 import matplotlib as mpl
 
-
 def inputHPtoArr(inputHp, NWTNUM):
     """
     Converts MongoTrials dictionary formatted hyperparameters to 1D array
@@ -57,8 +56,6 @@ def inputHPtoArr(inputHp, NWTNUM):
         int(inputHp['msdr'][0]),
         None, None, None, None, None,
         None, None, None, None, None]
-
-
     elif inputHp['linmeth'][0] + 1 == 2:
         arr = [NWTNUM,
         inputHp['headtol'][0],
