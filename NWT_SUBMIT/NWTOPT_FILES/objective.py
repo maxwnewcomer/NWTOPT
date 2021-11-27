@@ -1,61 +1,108 @@
+"""
+objective function utilized by hyperopt-monogdb-worker
+
+Receives hyperparameters, reformats them as a nwt,
+runs the model, pulls trial information from .list
+file, computes loss, and returns that loss
+"""
+# Disabling pylint snake_case warnings, import error warnings, and
+# redefining out of scope warnings, too many local variables
+# too many branches, too many statements
+#
+# pylint: disable = E0401, C0103, W0621, R0914, R0912, R0915, R0915
+
 import os
-import time
-import fileinput
+import math
 from datetime import datetime
-from subprocess import call, Popen, run, STDOUT, check_output, TimeoutExpired
-import subprocess
-from threading import Timer
-from shutil import copyfile, rmtree
+from subprocess import run, TimeoutExpired
+from shutil import copyfile
 import pandas as pd
 from hyperopt import STATUS_OK
-import math
 
-global timelim
-timelim = None
+def inputHp2nwt(inputHp, cwd):
+    """
+    Takes Hyperopt Hyperparameter format and reformats it as a .nwt file. This .nwt file
+    overwrites the local .nwt file and will thus be used by MODFLOW
 
-def inputHp2nwt(inputHp):
-    global cwd
-    global namefile
-    global initnwt
-    global NWTNUM
+    inputHp - hyperopt hyperparams
+    cwd - working directory of project
+
+    creates *.nwt file
+
+    returns path to *.nwt file
+    """
+    # keep track of which NWTNUM the machine is on
     with open(os.path.join(cwd, 'nwts', 'nwtnum.txt'), 'r+') as f:
         NWTNUM = int(f.read())
         f.seek(0)
         f.truncate()
         f.write(str(NWTNUM+1))
+    # Write the standard first line of the .nwt file
     with open(os.path.join(cwd, 'nwts', ('nwt_{}.nwt'.format(NWTNUM))), 'w') as file:
-        file.write(('{} {} {} {} {} {} {} {} CONTINUE {} {} {} {} {} {} {} {}'.format(inputHp[1], inputHp[2], int(inputHp[3]), inputHp[4], inputHp[0]['linmeth'], inputHp[5],
-                   inputHp[6], inputHp[7], inputHp[8], inputHp[9], inputHp[10], inputHp[11],
-                   inputHp[12], int(inputHp[13]), inputHp[14], inputHp[15])) + '\n')
+        file.write(('{} {} {} {} {} {} {} {} CONTINUE {} {} {} {} {} {} {} {}'.format(inputHp[1],
+            inputHp[2],
+            int(inputHp[3]),
+            inputHp[4],
+            inputHp[0]['linmeth'],
+            inputHp[5],
+            inputHp[6],
+            inputHp[7],
+            inputHp[8],
+            inputHp[9],
+            inputHp[10],
+            inputHp[11],
+            inputHp[12],
+            int(inputHp[13]),
+            inputHp[14],
+            inputHp[15])) + '\n')
+    # depending on the linmeth setting, change the formatting of the rest of the file
     if inputHp[0]['linmeth'] == 1:
         with open(os.path.join(cwd, 'nwts', ('nwt_{}.nwt'.format(NWTNUM))), 'a') as file:
-           file.write(('{} {} {} {} {}'.format(int(inputHp[0]['maxitinner']), inputHp[0]['ilumethod'], int(inputHp[0]['levfill']),
-                      inputHp[0]['stoptol'], int(inputHp[0]['msdr']))))
+            file.write(('{} {} {} {} {}'.format(int(inputHp[0]['maxitinner']),
+                                                inputHp[0]['ilumethod'],
+                                                int(inputHp[0]['levfill']),
+                                                inputHp[0]['stoptol'],
+                                                int(inputHp[0]['msdr']))))
     elif inputHp[0]['linmeth'] == 2:
         with open(os.path.join(cwd, 'nwts', ('nwt_{}.nwt'.format(NWTNUM))), 'a') as file:
-           file.write(('{} {} {} {} {} {} {} {} {} {}'.format(inputHp[0]['iacl'], inputHp[0]['norder'], int(inputHp[0]['level']),
-                      int(inputHp[0]['north']), inputHp[0]['iredsys'], inputHp[0]['rrctols'],
-                      inputHp[0]['idroptol'], inputHp[0]['epsrn'], inputHp[0]['hclosexmd'],
-                      int(inputHp[0]['mxiterxmd']))))
-    # print('[INFO] pulling nwt from', os.path.join(cwd, 'nwts', ('nwt_{}.nwt'.format(NWTNUM))))
+            file.write(('{} {} {} {} {} {} {} {} {} {}'.format(inputHp[0]['iacl'],
+                                                            inputHp[0]['norder'],
+                                                            int(inputHp[0]['level']),
+                                                            int(inputHp[0]['north']),
+                                                            inputHp[0]['iredsys'],
+                                                            inputHp[0]['rrctols'],
+                                                            inputHp[0]['idroptol'],
+                                                            inputHp[0]['epsrn'],
+                                                            inputHp[0]['hclosexmd'],
+                                                            int(inputHp[0]['mxiterxmd']))))
+
     return os.path.join(cwd, 'nwts', ('nwt_{}.nwt'.format(NWTNUM)))
 
-def trials2csv(trials):
-    global cwd
-    global namefile
-    global initnwt
-    df = pd.DataFrame(trials.results).drop('loss', axis=1)
-    df.to_csv(os.path.join(cwd, 'nwt_performance.csv'))
+def trials2csv(trials, d):
+    """
+    Converts Trials Dataframe Object to csv
 
-def runModel(pathtonwt, initnwt):
-    global cwd
-    global namefile
-    global timelim
-    copyfile(pathtonwt, os.path.join(cwd, initnwt))
+    trials - MongoTrials object
+    d - directory to save to
+
+    outputs nwt_performance.csv
+    """
+    df = pd.DataFrame(trials.results).drop('loss', axis=1)
+    df.to_csv(os.path.join(d, 'nwt_performance.csv'))
+
+def getModelRunCommands(cwd):
+    """
+    Pull time limit and run command from run.sh file
+
+    cwd - directory containing run.sh
+
+    returns time limit, run command
+    """
+
     last_line = ""
     run_command = ""
-    use_timer = True
     use_next = False
+    # open run.sh and look for run command and last line
     with open(os.path.join(cwd, 'run.sh')) as f:
         for line in f:
             if use_next:
@@ -64,18 +111,43 @@ def runModel(pathtonwt, initnwt):
             elif line.startswith('# Run Command:'):
                 use_next = True
             last_line = line
+    # last line should be timout, if empty or non-convertable timelim none
     try:
         timelim = float(last_line) * 60
         print(f'[INFO] Timeout for model run is set to {timelim / 60} minutes')
-    except Exception as e:
+    except ValueError:
         timelim = None
-        use_timer = False
         print('[INFO] No timeout set for model run')
+    return timelim, run_command
+
+def runModel(pathtonwt, initnwt, cwd, timelim, run_command):
+    """
+    Run the MODFLOW Model/Run Command using subprocess.run
+
+    pathtonwt - path to generated nwt
+    initnwt - path to initial nwt
+    cwd - working directory of the project
+    timelim - time limit
+    run_command - run command located in run.sh
+
+    returns True if successful terminimation of trial,
+    else returns false due to TimeoutExpired error
+
+    * NOTE * "successful termination" doesn't necessarily mean the model
+            didn't error out, only that the process has finished.
+    """
+    # replace initial nwt with newly generated nwt
+    copyfile(pathtonwt, os.path.join(cwd, initnwt))
     print(f'[INFO] Using run command: {run_command.strip()}')
     print(f'[INFO] Starting run out of {cwd}')
 
+    # try running, and if timeout catch
     try:
-        modflowProcess = run(run_command.strip().split(' '), cwd = cwd, capture_output = True, timeout = timelim)
+        modflowProcess = run(run_command.strip().split(' '),
+                            cwd = cwd,
+                            capture_output = True,
+                            timeout = timelim,
+                            check = True)
         print(str(modflowProcess.stdout, 'utf-8'), '\n', str(modflowProcess.stderr, 'utf-8'))
         print("[INFO] Successful termination of trial")
         return True
@@ -83,18 +155,26 @@ def runModel(pathtonwt, initnwt):
         print('[WARNING] Time Limit reached, terminating run')
         return False
 
-def getdata():
-    global cwd
-    global namefile
-    global listfile
-    global initnwt
+def getRunResults(cwd, listfile):
+    """
+    Pull Run Results from MODFLOW *.list file
+
+    cwd - project running directory
+    listfile - path to *.list file
+
+    if successful:
+        returns sec_elapsed, iterations, mass_balance
+    else:
+        returns 999999, -1, 999999
+    """
+    # find all the necessary lines in the .list file
     mbline, timeline, iterline = '', '', ''
     with open(os.path.join(cwd, listfile), 'r') as file:
         mbfound = False
         for line in reversed(list(file)):
             if 'Error in Preconditioning' in line:
                 return 999999, -1, 999999
-            if 'PERCENT DISCREPANCY' in line and mbfound == False:
+            if 'PERCENT DISCREPANCY' in line and mbfound is False:
                 mbfound = True
                 mbline = line
             if 'Elapsed run time' in line:
@@ -102,44 +182,56 @@ def getdata():
             if 'OUTER ITERATIONS' in line:
                 iterline = line
                 break
+
+    # check for run failure
     if timeline == '':
         return 999999, -1, 999999
 
+    # pull mass balance
     for val in mbline.split(' '):
         try:
             mass_balance = float(val)
             break
-        except:
-            pass
+        except ValueError:
+            print('[ERROR] bad run')
+            return 999999, -1, 999999
+
+    # prepare to pull run time information
     foundmin, foundsec, foundhour = False, False, False
-    min, sec, hrs, days = 0, 0, 0, 0
+    minutes, sec, hrs, days = 0, 0, 0, 0
+
+    # MODFLOW doesn't report timing consitantly, so we have
+    # to use some weird looping and calculations to
+    # pull the correct time information
     for val in reversed(timeline.split(' ')):
-        if foundsec == False:
+        if foundsec is False:
             try:
                 sec = float(val)
                 foundsec = True
-            except:
+            except ValueError:
                 pass
-        elif foundmin == False:
+        elif foundmin is False:
             try:
-                min = float(val)
+                minutes = float(val)
                 foundmin = True
-            except:
+            except ValueError:
                 pass
-        elif foundhour == False:
+        elif foundhour is False:
             try:
                 hrs = float(val)
                 foundhour = True
-            except:
+            except ValueError:
                 pass
         else:
             try:
                 days = float(val)
                 break
-            except:
+            except ValueError:
                 pass
+    # calculate how long everything took
+    sec_elapsed = days * 24 * 3600 + hrs * 3600 + minutes * 60 + sec
 
-    sec_elapsed = days * 24 * 3600 + hrs * 3600 + min * 60 + sec
+    # check for good values
     if sec_elapsed == 0:
         print('[ERROR] bad run')
         return 999999, -1, 999999
@@ -147,25 +239,36 @@ def getdata():
         try:
             iterations = float(val)
             break
-        except:
-            pass
-    try:
-        print('[MASS BALANCE]:', mass_balance)
-        print('[SECONDS]:', sec_elapsed)
-        print('[TOTAL ITERATIONS]:', iterations)
-        return sec_elapsed, iterations, mass_balance
-    except:
-        print('[ERROR] bad run')
-        return 999999, -1, 999999
+        except ValueError:
+            print('[ERROR] bad run')
+            return 999999, -1, 999999
+
+    print('[MASS BALANCE]:', mass_balance)
+    print('[SECONDS]:', sec_elapsed)
+    print('[TOTAL ITERATIONS]:', iterations)
+    return sec_elapsed, iterations, mass_balance
 
 def objective(inputHp):
-    global cwd
-    global namefile
-    global listfile
-    global initnwt
-    global timelim
+    """
+    Objective funciton that is called by hyperopt-mongo-worker
+
+    inputHp - hyperparams from Hyperopt
+
+    returns dictionary of trial run metrics:
+        {'loss': loss,
+        'status':  STATUS_OK,
+        'eval_time': eval_time,
+        'mass_balance': mass_balance,
+        'sec_elapsed': sec_elapsed,
+        'iterations': iterations,
+        'NWT Used': pathtonwt,
+        'finish_time': finish_time}
+    """
+    # get eval time, set up main variables to run
     eval_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    cwd = os.path.join(os.sep + os.path.join(*os.getcwd().split(os.sep)[0:-1]), os.path.join('NWT_SUBMIT','PROJECT_FILES'))
+    cwd = os.path.join(os.sep + os.path.join(*os.getcwd().split(os.sep)[0:-1]),
+                        os.path.join('NWT_SUBMIT','PROJECT_FILES'))
+    # get necessary file names and paths
     for file in os.listdir(cwd):
         if file.endswith('.nam'):
             namefile = file
@@ -174,8 +277,9 @@ def objective(inputHp):
         elif file.endswith('.nwt'):
             initnwt = file
     foundList, foundNWT = False, False
+    # pull correct list and nwt names from .name file
     with open(os.path.join(cwd, namefile), 'r') as f:
-        while(not(foundList and foundNWT)):
+        while not(foundList and foundNWT):
             line = f.readline()
             for e in line.split(' '):
                 if '.list' in e or '.lst' in e:
@@ -184,9 +288,11 @@ def objective(inputHp):
                 elif '.nwt' in e:
                     foundNWT = True
                     initnwt = e.strip()
-
-    pathtonwt = inputHp2nwt(inputHp)
-    if not runModel(pathtonwt, initnwt):
+    # convert hyperparams to nwt and get path
+    pathtonwt = inputHp2nwt(inputHp, cwd)
+    timelim, run_command = getModelRunCommands(cwd)
+    # run the model and check for errors
+    if not runModel(pathtonwt, initnwt, cwd, timelim, run_command):
         finish_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         return {'loss': 999999999999,
                 'status':  STATUS_OK,
@@ -196,13 +302,14 @@ def objective(inputHp):
                 'iterations': -1,
                 'NWT Used': pathtonwt,
                 'finish_time': finish_time}
-
-    sec_elapsed, iterations, mass_balance = getdata()
+    # if no errors get run results
+    sec_elapsed, iterations, mass_balance = getRunResults(cwd, listfile)
     if mass_balance == 999999:
         loss = 999999999999
     else:
         loss = math.exp(mass_balance ** 2) * sec_elapsed
     finish_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    # do final reporting
     return {'loss': loss,
             'status':  STATUS_OK,
             'eval_time': eval_time,

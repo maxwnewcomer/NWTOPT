@@ -1,7 +1,28 @@
+"""
+Master Script used to Run All necessary process
+
+[usage]: python3 NWTOPT.py --ip {mongodb ip}
+    --port {mongodb port}
+    --key {mongodb job key}
+    --random {set True if random hyperparameter generation is desired}
+    --trials {number of trials to run}
+    --workers {number of HTCondor workers}
+    --poll_interval {poll interval of HTCondor workers}
+    --enable_condor {True to enable condor job submission}
+    --timeout {desired timeout}
+
+* NOTE * not fully completed and not to be used
+"""
+# Disabling pylint snake_case warnings, import error warnings, and
+# redefining out of scope warnings, too many local variables
+# too many branches, too many statements
+#
+# pylint: disable = E0401, C0103, W0621, R0914, R0912, R0915, R0915
+
+
 import subprocess
 import time
 import os
-import sys
 import socket
 import argparse
 import fileinput
@@ -17,8 +38,10 @@ def modifySubmitFile(workers, ip, port, pollInterval):
         else:
             print(line, end='')
 
-## Kill all processes on ^C
 def signal_handler(signum, frame):
+    """
+    Kill all processes on ^C
+    """
     print(f'{os.linesep} [INFO] terminating all processes')
     killProcesses()
 
@@ -38,12 +61,15 @@ def modifyTimeout(timeout):
         else:
             print(line, end='')
 
-## End all processes that are ran by NWTOPT
+
 def killProcesses():
+    """
+    End all processes that are ran by NWTOPT
+    """
     os.killpg(db.pid, signal.SIGKILL)
     try:
         os.killpg(optimizer.pid, signal.SIGKILL)
-    except Exception as e:
+    except Exception:
         pass
     os.killpg(nwts.pid, signal.SIGKILL)
 
