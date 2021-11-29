@@ -32,4 +32,3 @@ echo
 ls
 dir=$(pwd)
 ${dir}/nwtenv/bin/hyperopt-mongo-worker --mongo=$1 --poll-interval=$2
-cat NWT_SUBMIT/PROJECT_FILES/run.sh
