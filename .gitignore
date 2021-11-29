@@ -10,5 +10,7 @@ run.sh
 *_nwts/
 logfile.txt
 *.reg
+nwtopt.sub
+auxilary/
 *.bak
 .ipynb_checkpoints
