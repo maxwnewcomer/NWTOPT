@@ -15,4 +15,4 @@ The non-updated version of the code specific to above referenced journal article
 
 [https://doi.org/10.5066/P9CPBZJX](https://doi.org/10.5066/P9CPBZJX)
 
-However, the code authors suggest that the most recent version of the code be used for most applications.
+However, the code authors suggest that the most recent version of the code available on [GitHub](https://github.com/maxwnewcomer/NWTOPT) be used for most applications.
