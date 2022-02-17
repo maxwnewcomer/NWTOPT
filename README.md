@@ -7,8 +7,12 @@ For documentation go to https://maxwnewcomer.github.io/NWTOPT/
 
 #### Associated Publications
 
-Newcomer and Hunt. "NWTOPT – A hyperparameter optimization approach for selection of environmental model solver settings". *Environmental Modelling & Software*, Volume 147, 2022, [https://doi.org/10.1016/j.envsoft.2021.105250](https://doi.org/10.1016/j.envsoft.2021.105250)
+Newcomer, M.W., and R.J., Hunt. 2022. "NWTOPT – A hyperparameter optimization approach for selection of environmental model solver settings". *Environmental Modelling & Software*, Volume 147, [https://doi.org/10.1016/j.envsoft.2021.105250](https://doi.org/10.1016/j.envsoft.2021.105250)
 
-#### DOI
+#### USGS Software Release
+
+The non-updated version of the code specific to above referenced journal article is available on:
 
 [https://doi.org/10.5066/P9CPBZJX](https://doi.org/10.5066/P9CPBZJX)
+
+However, the code authors suggest that the most recent version of the code be used for most applications.
