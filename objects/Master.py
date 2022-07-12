@@ -1,5 +1,5 @@
 import sys
-
+from .OPTSubprocess import OPTSubprocess
 # import from directory up
 sys.path.append('..')
 from config.HParams import hparams
