@@ -29,6 +29,7 @@ import argparse
 import fileinput
 import signal
 import logging
+import asyncio
 from collections import defaultdict
 from objects.OPTSubprocess import OPTSubprocess
 from objects.Master import Master
@@ -51,9 +52,6 @@ class NWTOPT():
         self.logger = self.init_logger()
         
         self.log(f'Working out of {self.cwd}', 0)
-        self.log(f'Test Warning', 1)
-        self.log('Test error', 2)
-        self.log('Test Invalid Level', 3)
 
     def init_logger(self):
         logger = logging.getLogger('NWTOPT')
@@ -82,7 +80,10 @@ class NWTOPT():
             else:
                 self.logger.error(msg)
 
-
+    async def init_db(self):
+        db_process = DB(1, self.logger, self.cwd, self.ip, self.port)
+        await db_process.init_db()
+        self.processes['DB'] = db_process
     
     def modifySubmitFile(self, workers, ip, port, pollInterval):
         for line in fileinput.input('nwtopt.sub', inplace = True):
@@ -142,7 +143,9 @@ if __name__ == '__main__':
     cluster = None
     FNULL = open(os.devnull, 'w')
 
+    
     OPTHandler.modifyTimeout()
+    asyncio.run(OPTHandler.init_db())
 
    # print(f'[INIT] starting database at {args.ip}:{args.port}/db')
    # db = subprocess.Popen(f'{cwd}/mongodb/bin/mongod --dbpath {cwd}/mongodb/db --bind_ip {args.ip} ' +
