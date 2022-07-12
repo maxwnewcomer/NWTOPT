@@ -48,7 +48,6 @@ class NWTOPT():
         self.timeout = args.timeout
         self.cwd = os.getcwd()
         self.processes = defaultdict(OPTSubprocess)
-        
         self.logger = self.init_logger()
         
         self.log(f'Working out of {self.cwd}', 0)
@@ -73,16 +72,18 @@ class NWTOPT():
     def log(self, msg, level):
         if level not in [0, 1, 2]: self.log('Invalid log level', 2)
         else:
-            if level is 0:
+            if level == 0:
                 self.logger.info(msg)
-            elif level is 1:
+            elif level == 1:
                 self.logger.warning(msg)
             else:
                 self.logger.error(msg)
 
-    async def init_db(self):
+    def init_db(self):
         db_process = DB(1, self.logger, self.cwd, self.ip, self.port)
-        await db_process.init_db()
+        dbLoop = asyncio.new_event_loop()
+        dbLoop.create_task(db_process.init_db())
+        dbLoop.run_forever()
         self.processes['DB'] = db_process
     
     def modifySubmitFile(self, workers, ip, port, pollInterval):
@@ -145,8 +146,7 @@ if __name__ == '__main__':
 
     
     OPTHandler.modifyTimeout()
-    asyncio.run(OPTHandler.init_db())
-
+    OPTHandler.init_db()
    # print(f'[INIT] starting database at {args.ip}:{args.port}/db')
    # db = subprocess.Popen(f'{cwd}/mongodb/bin/mongod --dbpath {cwd}/mongodb/db --bind_ip {args.ip} ' +
    #                       f'--port {args.port} --quiet > db_output.txt', shell=True, preexec_fn=os.setsid)
