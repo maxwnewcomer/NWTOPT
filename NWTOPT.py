@@ -34,6 +34,7 @@ from collections import defaultdict
 from objects.OPTSubprocess import OPTSubprocess
 from objects.Master import Master
 from objects.DB import DB
+from objects.Condor import Condor
 
 class NWTOPT():
     def __init__(self, args):
@@ -44,11 +45,13 @@ class NWTOPT():
         self.random = args.random
         self.trials = args.trials
         self.poll_interval = args.poll_interval
-        self.eneable_condor = args.enable_condor
+        self.enable_condor = args.enable_condor
         self.timeout = args.timeout
         self.cwd = os.getcwd()
         self.processes = defaultdict(OPTSubprocess)
         self.logger = self.init_logger()
+        
+        self.event_loop = asyncio.new_event_loop()
         
         self.log(f'Working out of {self.cwd}', 0)
 
@@ -62,7 +65,7 @@ class NWTOPT():
                 logger.removeHandler(hdlr)
 
         file_handler = logging.FileHandler('./NWTOPT.log', mode='w', encoding='utf-8')
-        formatter = logging.Formatter('%(asctime)s:[%(levelname)7s]:%(name)12s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s:[%(levelname)7s]:%(processName)12s - %(message)s')
         file_handler.setFormatter(formatter)
         console_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -78,49 +81,21 @@ class NWTOPT():
                 self.logger.warning(msg)
             else:
                 self.logger.error(msg)
+    
+    def start_loop(self):
+        self.event_loop.create_task(self.processes['DB'].init_db())
+        if self.enable_condor:
+            self.event_loop.create_task(self.processes['Condor'].init_condor())
+        self.event_loop.run_forever()
 
     def init_db(self):
         db_process = DB(1, self.logger, self.cwd, self.ip, self.port)
-        dbLoop = asyncio.new_event_loop()
-        dbLoop.create_task(db_process.init_db())
-        dbLoop.run_forever()
         self.processes['DB'] = db_process
     
-    def modifySubmitFile(self, workers, ip, port, pollInterval):
-        for line in fileinput.input('nwtopt.sub', inplace = True):
-            if line.startswith('arguments'):
-                print(f'arguments               = {ip}:{port}/db {pollInterval}', end=os.linesep)
-            elif line.startswith('queue'):
-                print(f'queue {workers}', end=os.linesep)
-            else:
-                print(line, end='')
-
-    def signal_handler(self, signum, frame):
-        """
-        Kill all processes on ^C
-        """
-        print(f'{os.linesep} [INFO] terminating all processes')
-        killProcesses()
-
-    ## Modify run.sh to have user inputed timeout
-    def modifyTimeout(self):
-        printNext = False
-        for line in fileinput.input('run.sh', inplace = True):
-            if printNext:
-                if self.timeout is not None:
-                    print(self.timeout)
-                else:
-                    print()
-                printNext = False
-            elif line.startswith('# Model timeout'):
-                print(line, end='')
-                printNext = True
-            else:
-                print(line, end='')
-
-    def killProcesses(self):
-        pass
-
+    def init_condor(self):
+        condor_process = Condor(2, self.logger, self.ip, self.port, self.poll_interval, self.workers, self.timeout)
+        self.processes['Condor'] = condor_process
+    
 if __name__ == '__main__':
     # REMEBER TO REREQUIRE CERTAIN ARGS, SIMPLY FALSE FOR TESTING
     parser = argparse.ArgumentParser(description='NWTOPT - Hyperparameter Optimization for MODFLOW-NWT')
@@ -132,7 +107,7 @@ if __name__ == '__main__':
     parser.add_argument('--trials', type=int, required=False, default = 1, help='the number of optimization trials')
     parser.add_argument('--poll_interval', type=int, required=False, default=240, help='the frequency that a Condor worker pings the DB in seconds')
     parser.add_argument('--enable_condor', type=bool, required=False, default=True, help='set to True to send out jobs through Condor')
-    parser.add_argument('--timeout', type=float, required=False, default=None, help='model run time limit - leave empty for no time limit')
+    parser.add_argument('--timeout', type=float, required=False, default=22, help='model run time limit - leave empty for no time limit')
     # init vars
     args = parser.parse_args()
     assert args.trials > 0, 'You cannot run NWTOPT with less than 1 trial' 
@@ -145,8 +120,12 @@ if __name__ == '__main__':
     FNULL = open(os.devnull, 'w')
 
     
-    OPTHandler.modifyTimeout()
+    # MOVE MODIFY TIMEOUT TO CONDOR INIT
     OPTHandler.init_db()
+    if args.enable_condor:
+        OPTHandler.init_condor()
+    OPTHandler.start_loop()
+    
    # print(f'[INIT] starting database at {args.ip}:{args.port}/db')
    # db = subprocess.Popen(f'{cwd}/mongodb/bin/mongod --dbpath {cwd}/mongodb/db --bind_ip {args.ip} ' +
    #                       f'--port {args.port} --quiet > db_output.txt', shell=True, preexec_fn=os.setsid)
