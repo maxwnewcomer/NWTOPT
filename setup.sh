@@ -11,3 +11,4 @@ read -p "Press enter to create necessary directories"
 mkdir mongodb/db
 mkdir logs
 mkdir logs/condor_logs; mkdirgit stlogs/errors; mkdir logs/outputs
+echo "Completed directory and environment setup for NWTOPT"
