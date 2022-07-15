@@ -21,12 +21,12 @@ conda-unpack
 python3 --version
 echo ...Changed Python Environment...
 echo
-mv NWT_SUBMIT/NWTOPT_FILES/objective.py nwtenv/bin/objective.py
+cp NWT_SUBMIT/NWTOPT_FILES/objective.py nwtenv/bin/objective.py
 cp run.sh nwtenv/bin/run.sh
 cp run.sh NWT_SUBMIT/PROJECT_FILES/run.sh
 mv NWT_SUBMIT/NWTOPT_FILES/mfnwt NWT_SUBMIT/PROJECT_FILES/mfnwt
-mkdir NWT_SUBMIT/PROJECT_FILES/nwts
 mv NWT_SUBMIT/NWTOPT_FILES/nwtnum.txt NWT_SUBMIT/PROJECT_FILES/nwts/nwtnum.txt
+mv NWT_SUBMIT nwtenv/bin/NWT_SUBMIT
 echo ...Moved Necessary Files.....
 echo
 ls

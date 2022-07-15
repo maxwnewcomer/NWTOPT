@@ -12,4 +12,4 @@ class DB(OPTSubprocess):
         db = await asyncio.create_subprocess_shell(f'{self.cwd}/mongodb/bin/mongod --dbpath {self.cwd}/mongodb/db --bind_ip {self.ip} ' +
                  f'--port {self.port} --quiet > db_output.txt')
         self.pid = db.pid
-        super().log(f'MongoDB started at {self.ip}:{self.port}/db with PID {self.pid}', 0)
+        self.log(f'MongoDB started at {self.ip}:{self.port}/db with PID {self.pid}', 0)

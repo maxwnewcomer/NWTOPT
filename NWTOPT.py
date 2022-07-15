@@ -20,14 +20,11 @@ Master Script used to Run All necessary process
 # pylint: disable = E0401, C0103, W0621, R0914, R0912, R0915, R0915
 
 
-import subprocess
 import time
 import sys
 import os
 import socket
 import argparse
-import fileinput
-import signal
 import logging
 import asyncio
 from collections import defaultdict
@@ -35,6 +32,7 @@ from objects.OPTSubprocess import OPTSubprocess
 from objects.Master import Master
 from objects.DB import DB
 from objects.Condor import Condor
+from objects.DB_Poller import DB_Poller
 
 class NWTOPT():
     def __init__(self, args):
@@ -65,7 +63,7 @@ class NWTOPT():
                 logger.removeHandler(hdlr)
 
         file_handler = logging.FileHandler('./NWTOPT.log', mode='w', encoding='utf-8')
-        formatter = logging.Formatter('%(asctime)s:[%(levelname)7s]:%(processName)12s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s:[%(levelname)7s]:%(threadName)12s - %(message)s')
         file_handler.setFormatter(formatter)
         console_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -81,32 +79,45 @@ class NWTOPT():
                 self.logger.warning(msg)
             else:
                 self.logger.error(msg)
-    
+    async def wait(self, time):
+        await asyncio.sleep(time)
+
     def start_loop(self):
         self.event_loop.create_task(self.processes['DB'].init_db())
+        self.event_loop.create_task(self.processes['DB_Poller'].init_poller())
         if self.enable_condor:
             self.event_loop.create_task(self.processes['Condor'].init_condor())
+        self.event_loop.create_task(self.wait(3))
+        self.event_loop.create_task(self.processes['Master'].init_master())
         self.event_loop.run_forever()
+        
+    def init_master(self):
+        master_process = Master(3, self.logger, self.cwd, self.ip, self.port, self.key, self.random, self.trials)
+        self.processes['Master'] = master_process
 
     def init_db(self):
         db_process = DB(1, self.logger, self.cwd, self.ip, self.port)
         self.processes['DB'] = db_process
     
     def init_condor(self):
-        condor_process = Condor(2, self.logger, self.ip, self.port, self.poll_interval, self.workers, self.timeout)
+        condor_process = Condor(2, self.logger, self.cwd, self.ip, self.port, self.poll_interval, self.workers, self.timeout)
         self.processes['Condor'] = condor_process
+
+    def init_db_poller(self):
+        dbPoll_process = DB_Poller(4, self.logger, self.cwd, self.ip, self.port, self.key, 60)
+        self.processes['DB_Poller'] = dbPoll_process
     
 if __name__ == '__main__':
     # REMEBER TO REREQUIRE CERTAIN ARGS, SIMPLY FALSE FOR TESTING
     parser = argparse.ArgumentParser(description='NWTOPT - Hyperparameter Optimization for MODFLOW-NWT')
     parser.add_argument('--ip', type=str, required=False, default=socket.gethostbyname(socket.gethostname()), help='ip address of DB')
     parser.add_argument('--port', type=int, required=False, default=27017, help='port of DB')
-    parser.add_argument('--key', type=str, required=False, default = '', help='key of job you want to pull')
+    parser.add_argument('--key', type=str, required=True, default = '', help='key of job you want to pull')
     parser.add_argument('--workers', type=int, required=False, default=1, help='the number of Condor workers to deploy')
     parser.add_argument('--random', type=bool, required=False, default=False, help='set to True to switch from TPE to Random Search')
     parser.add_argument('--trials', type=int, required=False, default = 1, help='the number of optimization trials')
     parser.add_argument('--poll_interval', type=int, required=False, default=240, help='the frequency that a Condor worker pings the DB in seconds')
-    parser.add_argument('--enable_condor', type=bool, required=False, default=True, help='set to True to send out jobs through Condor')
+    parser.add_argument('--enable_condor', type=bool, required=False, default=False, help='set to True to send out jobs through Condor')
     parser.add_argument('--timeout', type=float, required=False, default=22, help='model run time limit - leave empty for no time limit')
     # init vars
     args = parser.parse_args()
@@ -116,21 +127,12 @@ if __name__ == '__main__':
         assert args.workers > 0, 'Please specify your desired number of workers'
     
     OPTHandler = NWTOPT(args)
-    cluster = None
-    FNULL = open(os.devnull, 'w')
-
     
-    # MOVE MODIFY TIMEOUT TO CONDOR INIT
     OPTHandler.init_db()
+    OPTHandler.init_master()
     if args.enable_condor:
         OPTHandler.init_condor()
-    OPTHandler.start_loop()
-    
-   # print(f'[INIT] starting database at {args.ip}:{args.port}/db')
-   # db = subprocess.Popen(f'{cwd}/mongodb/bin/mongod --dbpath {cwd}/mongodb/db --bind_ip {args.ip} ' +
-   #                       f'--port {args.port} --quiet > db_output.txt', shell=True, preexec_fn=os.setsid)
-   # if args.enable_condor:
-   #     time.sleep(3)
-   #     modifySubmitFile(args.workers, args.ip, args.port, args.poll_interval)
-   #     print(f'[CONDOR] starting {args.workers} worker(s)')
-   #     condor = subprocess.Popen('condor_submit nwtopt.sub', shell=True, preexec_fn=os.setsid, stdout=subprocess.PIPE) cluster = condor.communicate()[0].decode('utf-8').split(os.linesep)[-2].split(' ')[-1][:-1] print(f'[CONDOR] workers started on cluster {cluster}') # print(f'[INFO] you can find your nwts and their performance in nwt_performance.csv at {cwd}/{args.key}_nwts/') time.sleep(3) print('[INIT] starting the optimization') optimizer = subprocess.Popen(f'cd {cwd}/NWT_SUBMIT/NWTOPT_FILES; python optimize_NWT.py --ip {args.ip} --port {args.port} ' + f'--key {args.key} --random {args.random} --trials {args.trials}', shell=True, preexec_fn=os.setsid) time.sleep(3) nwts = subprocess.Popen(f'python {cwd}/pull_nwts.py --ip {args.ip} --port {args.port} --key {args.key} --loop True', shell=True, preexec_fn=os.setsid, stdout=FNULL, stderr=FNULL) # while optimizer.poll() is None: time.sleep(5) # killProcesses()
+    OPTHandler.init_db_poller()
+    OPTHandler.start_loop() 
+
+   #  killProcesses()
