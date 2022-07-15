@@ -4,18 +4,19 @@ import asyncio
 from .OPTSubprocess import OPTSubprocess
 
 class Condor(OPTSubprocess):
-    def __init__(self, id, logger, ip, port, poll_interval, workers, timeout):
+    def __init__(self, id, logger, cwd, ip, port, poll_interval, workers, timeout):
         super().__init__('Condor', id, logger)
         self.ip = ip
         self.port = port
         self.poll_interval = poll_interval
         self.workers = workers
         self.timeout = timeout
+        self.cwd = cwd
     
     async def init_condor(self):
         self.modify_timeout()
         self.modify_submit()
-        # await self.submit_condor()
+        await self.submit_condor()
 
         
     def modify_timeout(self):
@@ -48,6 +49,7 @@ class Condor(OPTSubprocess):
 
     async def submit_condor(self):
         self.log('Preparing to submit nwtopt.sub', 0)
-        condor_process = await asyncio.create_subprocess_shell(f'condor_submit {os.path.dirname(__file__)}/../nwtopt.sub')
+        condor_process = await asyncio.create_subprocess_shell(f'condor_submit nwtopt.sub', cwd=self.cwd)
         self.pid = condor_process.pid
         self.log('Submitted nwtopt.sub using condor_submit', 0)
+

@@ -62,34 +62,15 @@ Put all of your model's files, including the executable you would like to run, i
 
 Then edit the NWTOPT/run.sh script to specify the run command you would like to execute on each worker. At the bottom of the run.sh script you can enter a trial timeout (in minutes). If left blank no timeout will be implemented.
 
-Next, start your database. You can do this by running:
+Finally run the below code to start the DB, Condor Submission, and the Optimization:
 
 ```
-mongodb/bin/mongod --dbpath mongodb/db --bind_ip <ip> --port <port>
+python NWTOPT.py --ip <database ip> --port <database port> --key <unique optimization run id> --trials <number of trials to run> --enable_condor <True if condor run> --workers <number of condor workers to spawn>
 ```
 
-If you are using HTCondor to change the number of workers just change the queue number and make sure to update the port and ip in the nwtopt.sub file. To distribute your runs use:
+NWTOPT will then start recording the best trial on the STDOUT and give you some run progress information. When all trials are finished the NWTOPT.py process will automatically terminate.
 
-```
-condor_submit nwtopt.sub
-```
-
-
-Finally, start your optimization using:
-
-```
-cd NWT_SUBMIT/NWTOPT_FILES 
-python optimize_NWT.py --ip <database ip> --port <database port> --key <unique optimization run id> --trials <number of trials to run>
-```
-
-NWTOPT will then start recording the best trial on the STDOUT and give you some run progress information. Please note, the progress bar is not indicative of completed runs and should not be used as a means to determine runtime completion. When all trials are finished the optimize_NWT.py process will automatically terminate. It is also recommended that you run the optimize_NWT.py and MongoDB processes using screen. This ensures that these processes don't accidentally terminate when running on a machine that requires ssh to access. 
-
-To access a run's nwt files simply run:
-
-```
-python pull_nwts.py --ip <database ip> --port <database port> --key <unique optimization run id> [optional] --loop True
-```
-This script will place all the nwts in NWTOPT/\<unique optimization run id>_nwts and will also compile a nwt_performance.csv which records all Mass Balance and Time Elapsed information for each trial. A typical workflow includes starting all the process as stated above (using a screen session for optimize_NWT.py and the MongoDB process) and then running pull_nwts.py with loop set to True.
+This script will also place all the nwts in NWTOPT/\<unique optimization run id>_nwts and will also compile a nwt_performance.csv which records all Mass Balance and Time Elapsed information for each trial. A typical workflow includes starting all the process as stated above (using a screen session for optimize_NWT.py and the MongoDB process) and then running pull_nwts.py with loop set to True.
 
 ### Common Issues and Fixes
 If you are encounterring MongoDB errors due to linking try running:
@@ -111,4 +92,4 @@ Any other errors should be printed in the logs/errors/*_errors.txt files, and sh
 - [ ] MODFLOW-6 support
 - [x] GSFLOW support
 - [ ] Automatic insight generation
-- [ ] Master NWTOPT script
+- [x] Master NWTOPT script

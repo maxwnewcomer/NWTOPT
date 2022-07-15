@@ -186,15 +186,17 @@ def getRunResults(cwd, listfile):
     # check for run failure
     if timeline == '':
         return 999999, -1, 999999
-
+    mass_balance = None
     # pull mass balance
     for val in mbline.split(' '):
         try:
             mass_balance = float(val)
             break
         except ValueError:
-            print('[ERROR] bad run')
-            return 999999, -1, 999999
+            pass
+    if not mass_balance:
+        print('[ERROR] bad run')
+        return 999999, -1, 999999
 
     # prepare to pull run time information
     foundmin, foundsec, foundhour = False, False, False
@@ -235,13 +237,16 @@ def getRunResults(cwd, listfile):
     if sec_elapsed == 0:
         print('[ERROR] bad run')
         return 999999, -1, 999999
+    iterations = None
     for val in iterline.split(' '):
         try:
             iterations = float(val)
             break
         except ValueError:
-            print('[ERROR] bad run')
-            return 999999, -1, 999999
+            pass
+    if not iterations:
+        print('[ERROR] bad run')
+        return 999999, -1, 999999
 
     print('[MASS BALANCE]:', mass_balance)
     print('[SECONDS]:', sec_elapsed)
@@ -266,8 +271,7 @@ def objective(inputHp):
     """
     # get eval time, set up main variables to run
     eval_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    cwd = os.path.join(os.sep + os.path.join(*os.getcwd().split(os.sep)[0:-1]),
-                        os.path.join('NWT_SUBMIT','PROJECT_FILES'))
+    cwd = os.path.join(os.path.dirname(os.getcwd()), 'nwtenv','bin','NWT_SUBMIT','PROJECT_FILES')
     # get necessary file names and paths
     for file in os.listdir(cwd):
         if file.endswith('.nam'):
