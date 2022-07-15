@@ -87,7 +87,6 @@ class NWTOPT():
         self.event_loop.create_task(self.processes['DB_Poller'].init_poller())
         if self.enable_condor:
             self.event_loop.create_task(self.processes['Condor'].init_condor())
-        self.event_loop.create_task(self.wait(3))
         self.event_loop.create_task(self.processes['Master'].init_master())
         self.event_loop.run_forever()
         
