@@ -35,5 +35,4 @@ mv NWT_SUBMIT nwtenv/bin/NWT_SUBMIT
 echo ...Moved Necessary Files.....
 echo
 dir=$(pwd)
-export PYTHONPATH="${PYTHONPATH}:${dir}/nwtenv/bin/NWT_SUBMIT"
 ${dir}/nwtenv/bin/hyperopt-mongo-worker --mongo=$1 --poll-interval=$2
