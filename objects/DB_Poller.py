@@ -1,17 +1,24 @@
 import asyncio
 import pandas as pd
+import numpy as np
 import time
 import sys
 import os
 from .OPTSubprocess import OPTSubprocess
 from hyperopt.mongoexp import MongoTrials
 from hyperopt.exceptions import AllTrialsFailed
-
+# import from directory up
 sys.path.append('..')
 from config.HParams import MF5HParams
 
 class DB_Poller(OPTSubprocess):
+    """
+    Database poller subprocess object
+    """
     def __init__(self, id, logger, cwd, ip, port, key, poll_interval):
+        """
+        Initialization
+        """
         super().__init__('DB_Poller', id, logger)
         self.ip = ip
         self.port = port
@@ -19,18 +26,23 @@ class DB_Poller(OPTSubprocess):
         self.poll_interval = poll_interval
         self.HParams = MF5HParams()
         self.key = key
-        try:
+        if not os.path.exists(os.path.join(self.cwd, f'{self.key}_{self.HParams.filetype}s')):
             os.mkdir(os.path.join(self.cwd, f'{self.key}_{self.HParams.filetype}s'))
             self.log(f'Created {self.HParams.filetype} log directory', 0)
-        except FileExistsError:
-            pass
 
     async def init_poller(self):
+        """
+        Initialize the database poller object
+        """
         while True:
             self.pullHParams()
             await asyncio.sleep(self.poll_interval)
 
     def pullHParams(self):
+        """
+        Pulls the Hyperparameters from the MongoDB and converts them into individual
+        .nwt files and a pandas dictionary that gets exported as a performance.csv 
+        """
         trials = MongoTrials(f'mongo://{self.ip}:{self.port}/db/jobs', exp_key=self.key)
         # get best trial from run
         try:
@@ -45,7 +57,7 @@ class DB_Poller(OPTSubprocess):
 
         # get results of each trial and compile them into a list
         results = []
-        minLoss = 9999999
+        minLoss = np.inf
         for i in range(len(trials.trials)):
             trial = trials.trials[i].get('result').to_dict()
             try:

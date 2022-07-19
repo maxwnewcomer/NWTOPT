@@ -18,6 +18,7 @@ from subprocess import run, TimeoutExpired
 from shutil import copyfile
 import pandas as pd
 from hyperopt import STATUS_OK
+from numpy import Inf as INF
 
 def inputHp2nwt(inputHp, cwd):
     """
@@ -165,7 +166,7 @@ def getRunResults(cwd, listfile):
     if successful:
         returns sec_elapsed, iterations, mass_balance
     else:
-        returns 999999, -1, 999999
+        returns INF, -1, INF
     """
     # find all the necessary lines in the .list file
     mbline, timeline, iterline = '', '', ''
@@ -173,7 +174,7 @@ def getRunResults(cwd, listfile):
         mbfound = False
         for line in reversed(list(file)):
             if 'Error in Preconditioning' in line:
-                return 999999, -1, 999999
+                return INF, -1, INF
             if 'PERCENT DISCREPANCY' in line and mbfound is False:
                 mbfound = True
                 mbline = line
@@ -185,7 +186,7 @@ def getRunResults(cwd, listfile):
 
     # check for run failure
     if timeline == '':
-        return 999999, -1, 999999
+        return INF, -1, INF
     mass_balance = None
     # pull mass balance
     for val in mbline.split(' '):
@@ -196,7 +197,7 @@ def getRunResults(cwd, listfile):
             pass
     if not mass_balance:
         print('[ERROR] bad run')
-        return 999999, -1, 999999
+        return INF, -1, INF
 
     # prepare to pull run time information
     foundmin, foundsec, foundhour = False, False, False
@@ -236,7 +237,7 @@ def getRunResults(cwd, listfile):
     # check for good values
     if sec_elapsed == 0:
         print('[ERROR] bad run')
-        return 999999, -1, 999999
+        return INF, -1, INF
     iterations = None
     for val in iterline.split(' '):
         try:
@@ -246,7 +247,7 @@ def getRunResults(cwd, listfile):
             pass
     if not iterations:
         print('[ERROR] bad run')
-        return 999999, -1, 999999
+        return INF, -1, INF
 
     print('[MASS BALANCE]:', mass_balance)
     print('[SECONDS]:', sec_elapsed)
@@ -298,18 +299,18 @@ def objective(inputHp):
     # run the model and check for errors
     if not runModel(pathtonwt, initnwt, cwd, timelim, run_command):
         finish_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        return {'loss': 999999999999,
+        return {'loss': INF,
                 'status':  STATUS_OK,
                 'eval_time': eval_time,
-                'mass_balance': 999999,
+                'mass_balance': INF,
                 'sec_elapsed': timelim,
                 'iterations': -1,
                 'NWT Used': pathtonwt,
                 'finish_time': finish_time}
     # if no errors get run results
     sec_elapsed, iterations, mass_balance = getRunResults(cwd, listfile)
-    if mass_balance == 999999:
-        loss = 999999999999
+    if mass_balance == INF:
+        loss = INF
     else:
         loss = math.exp(mass_balance ** 2) * sec_elapsed
     finish_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')

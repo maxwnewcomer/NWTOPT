@@ -23,6 +23,7 @@ Master Script used to Run All necessary process
 import time
 import sys
 import os
+import shutil
 import socket
 import argparse
 import logging
@@ -35,7 +36,25 @@ from objects.Condor import Condor
 from objects.DB_Poller import DB_Poller
 
 class NWTOPT():
+    """
+    NWTOPT Master Script
+
+    [usage]: python3 NWTOPT.py 
+    --ip {mongodb ip}
+    --port {mongodb port}
+    --key {mongodb job key}
+    --random {set True if random hyperparameter generation is desired}
+    --trials {number of trials to run}
+    --workers {number of HTCondor workers}
+    --poll_interval {poll interval of HTCondor workers}
+    --enable_condor {True to enable condor job submission}
+    --timeout {desired timeout}
+
+    """
     def __init__(self, args):
+        """
+        Initialization Method
+        """
         self.ip = args.ip
         self.port = args.port
         self.key = args.key
@@ -47,13 +66,17 @@ class NWTOPT():
         self.timeout = args.timeout
         self.cwd = os.getcwd()
         self.processes = defaultdict(OPTSubprocess)
-        self.logger = self.init_logger()
-        
+        self.logger = self._init_logger()
         self.event_loop = asyncio.new_event_loop()
+        
+        shutil.copyfile(os.path.join(self.cwd, 'config', 'HParams.py'), os.path.join(self.cwd, 'NWT_SUBMIT', 'NWTOPT_FILES', 'HParams.py'))
         
         self.log(f'Working out of {self.cwd}', 0)
 
-    def init_logger(self):
+    def _init_logger(self):
+        """
+        Initializes logger
+        """
         logger = logging.getLogger('NWTOPT')
         logger.setLevel(logging.DEBUG)
         console_handler = logging.StreamHandler(stream=sys.stdout)
@@ -61,7 +84,7 @@ class NWTOPT():
         if logger.hasHandlers():
             for hdlr in logger.handlers:
                 logger.removeHandler(hdlr)
-
+        # creates both .log file and output stream
         file_handler = logging.FileHandler('./NWTOPT.log', mode='w', encoding='utf-8')
         formatter = logging.Formatter('%(asctime)s:[%(levelname)7s]:%(threadName)12s - %(message)s')
         file_handler.setFormatter(formatter)
@@ -71,6 +94,11 @@ class NWTOPT():
         return logger
 
     def log(self, msg, level):
+        """
+        Log
+
+        [usage]: takes in a log message and log severity
+        """
         if level not in [0, 1, 2]: self.log('Invalid log level', 2)
         else:
             if level == 0:
@@ -79,10 +107,11 @@ class NWTOPT():
                 self.logger.warning(msg)
             else:
                 self.logger.error(msg)
-    async def wait(self, time):
-        await asyncio.sleep(time)
 
     def start_loop(self):
+        """
+        Start asycio inifite loop
+        """
         self.event_loop.create_task(self.processes['DB'].init_db())
         self.event_loop.create_task(self.processes['DB_Poller'].init_poller())
         if self.enable_condor:
@@ -91,18 +120,30 @@ class NWTOPT():
         self.event_loop.run_forever()
         
     def init_master(self):
+        """
+        Initialize master process and store in NWTOPT object suprocesses
+        """
         master_process = Master(3, self.logger, self.cwd, self.ip, self.port, self.key, self.random, self.trials)
         self.processes['Master'] = master_process
 
     def init_db(self):
+        """
+        Initialize database process and store in NWTOPT object suprocesses
+        """
         db_process = DB(1, self.logger, self.cwd, self.ip, self.port)
         self.processes['DB'] = db_process
     
     def init_condor(self):
+        """
+        Initialize conodor process and store in NWTOPT object suprocesses
+        """
         condor_process = Condor(2, self.logger, self.cwd, self.ip, self.port, self.poll_interval, self.workers, self.timeout)
         self.processes['Condor'] = condor_process
 
     def init_db_poller(self):
+        """
+        Initialize database polling process and store in NWTOPT object suprocesses
+        """
         dbPoll_process = DB_Poller(4, self.logger, self.cwd, self.ip, self.port, self.key, 60)
         self.processes['DB_Poller'] = dbPoll_process
     
@@ -126,7 +167,7 @@ if __name__ == '__main__':
         assert args.workers > 0, 'Please specify your desired number of workers'
     
     OPTHandler = NWTOPT(args)
-    
+   # initialize subprocess and start loop 
     OPTHandler.init_db()
     OPTHandler.init_master()
     if args.enable_condor:
