@@ -11,5 +11,5 @@ conda pack -n $envname -o nwtenv.tgz
 read -p "Press enter to create necessary directories"
 mkdir mongodb/db
 mkdir logs
-mkdir logs/condor_logs; mkdir gitlogs/errors; mkdir logs/outputs
+mkdir logs/condor_logs; mkdir logs/errors; mkdir logs/outputs
 echo "Completed directory and environment setup for NWTOPT"
