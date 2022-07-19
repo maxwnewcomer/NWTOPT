@@ -22,8 +22,6 @@ python3 --version
 echo $PATH
 pwd
 echo
-ls nwtenv
-echo
 # echo -e ${PATH//:/\\n}
 echo ...Changed Python Environment...
 echo
@@ -38,5 +36,4 @@ echo ...Moved Necessary Files.....
 echo
 dir=$(pwd)
 export PYTHONPATH="${PYTHONPATH}:${dir}/nwtenv/bin/NWT_SUBMIT"
-ls nwtenv/bin
 ${dir}/nwtenv/bin/hyperopt-mongo-worker --mongo=$1 --poll-interval=$2
