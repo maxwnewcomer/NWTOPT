@@ -19,16 +19,24 @@ source nwtenv/bin/activate
 echo
 conda-unpack
 python3 --version
+echo $PATH
+pwd
+echo
+ls nwtenv
+echo
+# echo -e ${PATH//:/\\n}
 echo ...Changed Python Environment...
 echo
 cp NWT_SUBMIT/NWTOPT_FILES/objective.py nwtenv/bin/objective.py
 cp run.sh nwtenv/bin/run.sh
 cp run.sh NWT_SUBMIT/PROJECT_FILES/run.sh
+mv NWT_SUBMIT/NWTOPT_FILES/HParams.py NWT_SUBMIT/PROJECT_FILES/HParams.py
 mv NWT_SUBMIT/NWTOPT_FILES/mfnwt NWT_SUBMIT/PROJECT_FILES/mfnwt
 mv NWT_SUBMIT/NWTOPT_FILES/nwtnum.txt NWT_SUBMIT/PROJECT_FILES/nwts/nwtnum.txt
 mv NWT_SUBMIT nwtenv/bin/NWT_SUBMIT
 echo ...Moved Necessary Files.....
 echo
-ls
 dir=$(pwd)
+export PYTHONPATH="${PYTHONPATH}:${dir}/nwtenv/bin/NWT_SUBMIT"
+ls nwtenv/bin
 ${dir}/nwtenv/bin/hyperopt-mongo-worker --mongo=$1 --poll-interval=$2
