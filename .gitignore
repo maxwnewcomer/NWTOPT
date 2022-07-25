@@ -8,6 +8,8 @@ run.sh
 # usual
 .update-timestamp
 *_nwts/
+*.log
+*.pyc
 logfile.txt
 *.reg
 nwtopt.sub

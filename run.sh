@@ -1,6 +1,6 @@
 #!/bin/sh
 ############################
 # Run Command:
-./mfnwt meras_transient_rjh_19Feb20.nam
+wine MODFLOW-NWT_64.exe CP_modflow.nam
 # Model timeout (in minutes) - Leave blank if no timeout required
-315
+22
