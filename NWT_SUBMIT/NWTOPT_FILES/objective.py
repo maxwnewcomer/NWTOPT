@@ -17,8 +17,9 @@ from datetime import datetime
 from subprocess import run, TimeoutExpired
 from shutil import copyfile
 import pandas as pd
+import numpy as np
 from hyperopt import STATUS_OK
-
+import utils.mflistfile as mflistfile
 def inputHp2nwt(inputHp, cwd):
     """
     Takes Hyperopt Hyperparameter format and reformats it as a .nwt file. This .nwt file
@@ -318,3 +319,40 @@ def objective(inputHp):
             'iterations': iterations,
             'NWT Used': pathtonwt,
             'finish_time': finish_time}
+def getDataTransient(listfile):
+    '''
+    Version of getdata() that uses flopy to get the mass balance
+    errors for the whole transient run and returns the mass loss as
+    sum(abs(incremental_percent_disrepancy)*length_stress_period)/sum(length_stress_period).
+
+    flopy doesn't grab iterations - just set to -1 for right now.
+
+    '''
+    
+    try:
+        mf_list = mflistfile.MfListBudget(listfile)
+        incr_df, cum_df = mf_list.get_dataframes(start_datetime='1984-10-01')
+        sec_elapsed = mf_list.get_model_runtime(units='seconds')
+
+        # get absolute value of discrepancy
+        incr_df['abs_pct_diff'] = np.abs(incr_df['PERCENT_DISCREPANCY'])
+    
+        # put in time in days for the time steps
+        incr_df['dt'] = incr_df.index.to_series().diff().dt.total_seconds().div(3600*24, fill_value=0)
+
+        # area under the curve = abs_pct_diff * stress_period_length
+        incr_df['area'] = incr_df['abs_pct_diff'] * incr_df['dt']
+
+        # normalize by the total days as mass balance error
+        mass_balance = np.sum(incr_df['area'])/np.sum(incr_df['dt'])
+
+        # set iterations
+        iterations = -1
+
+        print('[MASS BALANCE]:', mass_balance)
+        print('[SECONDS]:', sec_elapsed)
+        print('[TOTAL ITERATIONS]:', iterations)
+        return sec_elapsed, iterations, mass_balance
+    except:
+        print('[ERROR] bad run')
+        return 999999, -1, 999999
