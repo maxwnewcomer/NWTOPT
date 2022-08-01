@@ -4,6 +4,9 @@ objective function utilized by hyperopt-monogdb-worker
 Receives hyperparameters, reformats them as a nwt,
 runs the model, pulls trial information from .list
 file, computes loss, and returns that loss
+
+Uses code from flopy package 
+https://github.com/modflowpy/flopy/blob/develop/flopy/utils/mflistfile.py
 """
 # Disabling pylint snake_case warnings, import error warnings, and
 # redefining out of scope warnings, too many local variables
@@ -19,6 +22,7 @@ from shutil import copyfile
 import pandas as pd
 from hyperopt import STATUS_OK
 from numpy import Inf as INF
+import utils.mflistfile as mflistfile
 
 def inputHp2nwt(inputHp, cwd):
     """
@@ -93,24 +97,34 @@ def trials2csv(trials, d):
 
 def getModelRunCommands(cwd):
     """
-    Pull time limit and run command from run.sh file
+    Pull time limit, run command, and run type from run.sh file
 
     cwd - directory containing run.sh
 
-    returns time limit, run command
+    returns time limit, run command, run type
     """
 
     last_line = ""
     run_command = ""
+    run_type = ""
     use_next = False
+    rcommand = False
+    rtype = False
     # open run.sh and look for run command and last line
     with open(os.path.join(cwd, 'run.sh')) as f:
         for line in f:
             if use_next:
-                run_command = line
+                if rcommand:
+                    run_command = line
+                if rtype:
+                    run_type = line
                 use_next = False
             elif line.startswith('# Run Command:'):
                 use_next = True
+                rcommand = True
+            elif line.startswith('# Model run_type'):
+                use_next = True
+                rtype = True
             last_line = line
     # last line should be timout, if empty or non-convertable timelim none
     try:
@@ -119,7 +133,7 @@ def getModelRunCommands(cwd):
     except ValueError:
         timelim = None
         print('[INFO] No timeout set for model run')
-    return timelim, run_command
+    return timelim, run_command, run_type
 
 def runModel(pathtonwt, initnwt, cwd, timelim, run_command):
     """
@@ -295,7 +309,7 @@ def objective(inputHp):
                     initnwt = e.strip()
     # convert hyperparams to nwt and get path
     pathtonwt = inputHp2nwt(inputHp, cwd)
-    timelim, run_command = getModelRunCommands(cwd)
+    timelim, run_command, run_type = getModelRunCommands(cwd)
     # run the model and check for errors
     if not runModel(pathtonwt, initnwt, cwd, timelim, run_command):
         finish_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -307,19 +321,73 @@ def objective(inputHp):
                 'iterations': -1,
                 'NWT Used': pathtonwt,
                 'finish_time': finish_time}
-    # if no errors get run results
-    sec_elapsed, iterations, mass_balance = getRunResults(cwd, listfile)
-    if mass_balance == INF:
-        loss = INF
-    else:
-        loss = math.exp(mass_balance ** 2) * sec_elapsed
-    finish_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    # do final reporting
-    return {'loss': loss,
-            'status':  STATUS_OK,
-            'eval_time': eval_time,
-            'mass_balance': mass_balance,
-            'sec_elapsed': sec_elapsed,
-            'iterations': iterations,
-            'NWT Used': pathtonwt,
-            'finish_time': finish_time}
+    # if no errors get run results based off of run_type
+    if run_type == 'nwt-ss':
+        sec_elapsed, iterations, mass_balance = getRunResults(cwd, listfile)
+        if mass_balance == INF:
+            loss = INF
+        else:
+            loss = math.exp(mass_balance ** 2) * sec_elapsed
+            finish_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            # do final reporting
+        return {'loss': loss,
+                'status':  STATUS_OK,
+                'eval_time': eval_time,
+                'mass_balance': mass_balance,
+                'sec_elapsed': sec_elapsed,
+                'iterations': iterations,
+                'NWT Used': pathtonwt,
+                'finish_time': finish_time}
+    elif run_type == 'nwt-t':
+        sec_elapsed, iterations, mass_balance = getDataTransient(listfile)
+        if mass_balance == INF:
+            loss = INF
+        else:
+            loss = math.exp(mass_balance ** 2) * sec_elapsed
+            finish_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        return {'loss': loss,
+                'status':  STATUS_OK,
+                'eval_time': eval_time,
+                'mass_balance': mass_balance,
+                'sec_elapsed': sec_elapsed,
+                'iterations': iterations,
+                'NWT Used': pathtonwt,
+                'finish_time': finish_time}
+    
+def getDataTransient(listfile):
+    '''
+    Version of getdata() that uses flopy to get the mass balance
+    errors for the whole transient run and returns the mass loss as
+    sum(abs(incremental_percent_disrepancy)*length_stress_period)/sum(length_stress_period).
+
+    flopy doesn't grab iterations - just set to -1 for right now.
+
+    '''
+    
+    try:
+        mf_list = mflistfile.MfListBudget(listfile)
+        incr_df, cum_df = mf_list.get_dataframes(start_datetime='1984-10-01')
+        sec_elapsed = mf_list.get_model_runtime(units='seconds')
+
+        # get absolute value of discrepancy
+        incr_df['abs_pct_diff'] = np.abs(incr_df['PERCENT_DISCREPANCY'])
+    
+        # put in time in days for the time steps
+        incr_df['dt'] = incr_df.index.to_series().diff().dt.total_seconds().div(3600*24, fill_value=0)
+
+        # area under the curve = abs_pct_diff * stress_period_length
+        incr_df['area'] = incr_df['abs_pct_diff'] * incr_df['dt']
+
+        # normalize by the total days as mass balance error
+        mass_balance = np.sum(incr_df['area'])/np.sum(incr_df['dt'])
+
+        # set iterations
+        iterations = -1
+
+        print('[MASS BALANCE]:', mass_balance)
+        print('[SECONDS]:', sec_elapsed)
+        print('[TOTAL ITERATIONS]:', iterations)
+        return sec_elapsed, iterations, mass_balance
+    except:
+        print('[ERROR] bad run')
+        return INF, -1, INF

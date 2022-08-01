@@ -8,7 +8,7 @@ class Condor(OPTSubprocess):
     """
     Condor Subprocess Object
     """
-    def __init__(self, id, logger, cwd, ip, port, poll_interval, workers, timeout):
+    def __init__(self, id, logger, cwd, ip, port, poll_interval, workers, timeout, run_type):
         """
         Initialization of Condor process
         """
@@ -19,6 +19,7 @@ class Condor(OPTSubprocess):
         self.workers = workers
         self.timeout = timeout
         self.cwd = cwd
+        self.run_type = run_type
     
     async def init_condor(self):
         """
@@ -26,6 +27,7 @@ class Condor(OPTSubprocess):
         """
         self._modify_timeout()
         self._modify_submit()
+        self._modify_run_type()
         await self.submit_condor()
 
     def _modify_timeout(self):
@@ -48,6 +50,24 @@ class Condor(OPTSubprocess):
                 print(line, end='')
         self.log(f'Modified the run.sh file to enforce a worker timeout of {self.timeout} minutes', 0)
 
+    def _modify_run_type(self):
+        """
+        Modifies the run type of the run.sh file based on input
+        """
+        printNext = False
+        for line in fileinput.input(os.path.dirname(__file__)+'/../run.sh', inplace = True):
+            if printNext:
+                if self.run_type is not None: 
+                    print(self.run_type)
+                else:
+                    print()
+                printNext = False
+            elif line.startswith('# Model run_type'):
+                print(line, end='')
+                printNext = True
+            else:
+                print(line, end='')
+        self.log(f'Modified the run.sh file to enforce run type {self.run_type}')
 
     def _modify_submit(self):
         """
@@ -71,3 +91,4 @@ class Condor(OPTSubprocess):
         self.pid = condor_process.pid
         self.log('Submitted nwtopt.sub using condor_submit', 0)
 
+        

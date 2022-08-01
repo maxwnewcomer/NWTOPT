@@ -10,6 +10,7 @@ Master Script used to Run All necessary process
     --poll_interval {poll interval of HTCondor workers}
     --enable_condor {True to enable condor job submission}
     --timeout {desired timeout}
+    --runtype {type of run}
 
 * NOTE * not fully completed and not to be used
 """
@@ -49,6 +50,7 @@ class NWTOPT():
     --poll_interval {poll interval of HTCondor workers}
     --enable_condor {True to enable condor job submission}
     --timeout {desired timeout}
+    --run_type {type of run}
 
     """
     def __init__(self, args):
@@ -64,6 +66,7 @@ class NWTOPT():
         self.poll_interval = args.poll_interval
         self.enable_condor = args.enable_condor
         self.timeout = args.timeout
+        self.run_type = args.run_type
         self.cwd = os.getcwd()
         self.processes = defaultdict(OPTSubprocess)
         self.logger = self._init_logger()
@@ -110,7 +113,7 @@ class NWTOPT():
 
     def start_loop(self):
         """
-        Start asycio inifite loop
+        Start asycio infinite loop
         """
         self.event_loop.create_task(self.processes['DB'].init_db())
         self.event_loop.create_task(self.processes['DB_Poller'].init_poller())
@@ -137,7 +140,7 @@ class NWTOPT():
         """
         Initialize conodor process and store in NWTOPT object suprocesses
         """
-        condor_process = Condor(2, self.logger, self.cwd, self.ip, self.port, self.poll_interval, self.workers, self.timeout)
+        condor_process = Condor(2, self.logger, self.cwd, self.ip, self.port, self.poll_interval, self.workers, self.timeout, self.run_type)
         self.processes['Condor'] = condor_process
 
     def init_db_poller(self):
@@ -159,10 +162,12 @@ if __name__ == '__main__':
     parser.add_argument('--poll_interval', type=int, required=False, default=240, help='the frequency that a Condor worker pings the DB in seconds')
     parser.add_argument('--enable_condor', type=bool, required=False, default=False, help='set to True to send out jobs through Condor')
     parser.add_argument('--timeout', type=float, required=False, default=22, help='model run time limit - leave empty for no time limit')
+    parser.add_argument('--run_type', type=str, required=True, default='nwt-ss', help='run type either steady state or transient')
     # init vars
     args = parser.parse_args()
     assert args.trials > 0, 'You cannot run NWTOPT with less than 1 trial' 
     assert args.poll_interval > 0, 'You cannot run NWTOPT with a poll interval less than 1 second'
+    assert args.run_type in ['nwt-ss','nwt-t'], 'Invalid run type'
     if args.enable_condor:
         assert args.workers > 0, 'Please specify your desired number of workers'
     
