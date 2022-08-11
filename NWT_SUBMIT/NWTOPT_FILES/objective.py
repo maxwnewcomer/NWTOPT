@@ -20,10 +20,10 @@ from datetime import datetime
 from subprocess import run, TimeoutExpired
 from shutil import copyfile
 import pandas as pd
+import numpy as np
 from hyperopt import STATUS_OK
 from numpy import Inf as INF
 import utils.mflistfile as mflistfile
-
 def inputHp2nwt(inputHp, cwd):
     """
     Takes Hyperopt Hyperparameter format and reformats it as a .nwt file. This .nwt file
@@ -353,7 +353,6 @@ def objective(inputHp):
                 'iterations': iterations,
                 'NWT Used': pathtonwt,
                 'finish_time': finish_time}
-    
 def getDataTransient(listfile):
     '''
     Version of getdata() that uses flopy to get the mass balance

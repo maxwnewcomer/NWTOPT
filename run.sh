@@ -6,3 +6,5 @@ wine MODFLOW-NWT_64.exe CP_modflow.nam
 22
 # Model run_type (nwt-ss or nwt-t)
 nwt-ss
+
+
