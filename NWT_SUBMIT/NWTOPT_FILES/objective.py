@@ -23,7 +23,7 @@ import pandas as pd
 import numpy as np
 from hyperopt import STATUS_OK
 from numpy import Inf as INF
-import utils.mflistfile as mflistfile
+from .utils.mflistfile import ListBudget
 def inputHp2nwt(inputHp, cwd):
     """
     Takes Hyperopt Hyperparameter format and reformats it as a .nwt file. This .nwt file
@@ -364,7 +364,7 @@ def getDataTransient(listfile):
     '''
     
     try:
-        mf_list = mflistfile.MfListBudget(listfile)
+        mf_list = ListBudget.MfListBudget(listfile)
         incr_df, cum_df = mf_list.get_dataframes(start_datetime='1984-10-01')
         sec_elapsed = mf_list.get_model_runtime(units='seconds')
 

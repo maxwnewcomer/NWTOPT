@@ -10,9 +10,9 @@ import re
 
 import numpy as np
 
-from utils.utl_import import import_optional_dependency
-from utils.flopy_io import get_ts_sp
-from utils.utils_def import totim_to_datetime
+from .utl_import import import_optional_dependency
+from .flopy_io import get_ts_sp
+from .utils_def import totim_to_datetime
 
 
 

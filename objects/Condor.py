@@ -67,7 +67,7 @@ class Condor(OPTSubprocess):
                 printNext = True
             else:
                 print(line, end='')
-        self.log(f'Modified the run.sh file to enforce run type {self.run_type}')
+        self.log(f'Modified the run.sh file to enforce run type {self.run_type}', 0)
 
     def _modify_submit(self):
         """
